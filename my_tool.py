@@ -54,10 +54,14 @@ class Control():
 			aim_object=self.rect
 		for i in args:
 			setattr(aim_object,i,getattr(object,i))
-		
+		self.update_rect()
+	def update_rect(self):
+		pass
+	
 	def update(self,**kargs):
 		for name,value in kargs.items():
 			setattr(self,name,value)
+		self.update_rect()
 
 
 
@@ -73,6 +77,7 @@ class Control():
 		
 		self.rect.x+= x
 		self.rect.y+=y
+		self.update_rect()
 
 	def change_status(self,status=None):
 		'''这是改变开启状态的方法'''
@@ -193,51 +198,6 @@ class Button(Control):
 			return self.down
 		return None
 	
-
-class InputBox():
-	def __init__(self,window,rect,font='./res/font/SourceHanSerifCN/Regular.otf',text_color=(255,255,255),bgcolor=None,box_color=(255,255,255),box_width=1,start=True):
-
-		self.window=window
-		self.window_rect=window.get_rect()
-
-		#矩形框的Rect对象
-		self.rect=pygame.Rect(rect)
-
-		#输入框字体路径
-		self.font=font
-		#输入框字体Font对象
-		self.font_tool=pygame.font.Font(font)
-		#输入框字体颜色
-		self.text_color=text_color
-
-		#框内矩形的颜色,默认为None即无颜色
-		self.bgcolor=bgcolor
-
-		#框的颜色
-		self.box_color=box_color
-		#框的线宽
-		if bgcolor:
-			box_width=0
-		self.box_width=box_width
-
-		#收集输入的内容
-		self.text=[]
-
-		#输入框是否被激活（即被点击）
-		self.status=False
-
-		#光标闪烁计时，每20清零
-		self.shine_time=0
-
-		#光标位置
-		self.site=0
-
-		#启用状态
-		self.start=start
-
-
-	def blit(self):
-		pygame.draw.rect(self.window,self.bgcolor,self.rect)
 
 
 
@@ -1099,3 +1059,184 @@ class OutputBox(Control):
 	def check(self,event):
 		self.scrollbar.check(event)
 		
+
+
+
+
+
+class InputBox(Control):
+    def __init__(self,window,rect,text='', font=None,font_color=(0,0,0),bg_font_color=None,focus=False,cursor_index=0,box_line_color=(0,0,0),box_line_width=1,bg_color=(255,255,255),x_pad=2,y_pad=2,cursor_width=1,flash_sign=0,flash_sign_max=100,event_enable=True,visible=True,start=True):
+        self.window = window
+        super().__init__(window,event_enable=event_enable,visible=visible,start=start)
+        self.window_rect=window.get_rect()
+        
+        self.rect=pygame.rect.Rect(rect)
+
+        self.box_line_color=box_line_color
+        self.box_line_width=box_line_width
+        self.bg_color=bg_color
+
+        self.x_pad=x_pad+self.box_line_width
+        self.y_pad=y_pad
+
+        self.font=pygame.font.Font(font,self.rect.height)
+#        self.font_width,self.font_height=self.font.size()
+        self.font_color=font_color
+        self.text_start_position=(self.rect.x+self.x_pad,self.rect.y+ self.y_pad)
+        self.bg_font_color=bg_font_color
+        self.text=list(text)
+        
+        #这是相对于self.window的rect
+        self.text_rect=self.rect.copy()
+        self.text_rect.x+=self.x_pad
+        self.text_rect.y+=self.y_pad
+        self.text_rect.width-=2*self.x_pad
+        self.text_rect.height-=2*self.y_pad
+        
+
+#这是相对于self.text_surface的rect
+        self.text_show_rect=pygame.rect.Rect((0,0,self.rect.width- 2*self.x_pad,self.rect.height-2/self.y_pad))
+        self.text_surface=self.font.render(''.join(self.text),True, self.font_color,self.bg_font_color)
+
+        self.focus=focus
+        self.cursor_index=cursor_index
+        #self.cursor_position=[self.rect.x+self.x_pad+ self.font.render(self.text, True,(0,0,0)).get_width(),self.rect.y-self.y_pad]
+        self.cursor_height=self.rect.height-2*self.y_pad
+
+        self.cursor_width=cursor_width
+        self.flash_sign=flash_sign
+        self.flash_sign_max=flash_sign_max
+        
+    #    self.a=0
+ #       self.text_show_rect.left=self.cursor_position[0]
+
+
+
+
+    @property
+    def cursor_position(self):
+        text_width=self.font.size(''.join(self.text[:self.cursor_index]))[0]
+        
+        if text_width >= self.text_show_rect.width:
+            return (self.rect.right-self.x_pad, self.rect.y)
+        else:
+            return (text_width+self.rect.x+self.x_pad,self.rect.y)
+
+    def blit(self):
+        if self.visible:
+      #      pygame.draw.line(self.window,self.font_color, self.cursor_position,[self.cursor_position[0],self.cursor_position[1]+self.cursor_height], width=self.cursor_width)
+#背景框
+            pygame.draw.rect(self.window,self.bg_color,self.rect)
+#线框
+            pygame.draw.rect(self.window,self.box_line_color,self.rect\
+                ,self.box_line_width)
+#文本
+#            self.blit(self.font.render(''.join(self.text), True, self.font_color, background=self.bg_font_color),self.text_start_position)
+
+            text_width=self.font.size(''.join(self.text[:self.cursor_index]))[0]
+            if text_width<self.text_show_rect.width:
+                self.text_show_rect.left=0
+            else:
+                self.text_show_rect.right=text_width
+            self.window.blit(self.text_surface,self.text_start_position, self.text_show_rect)
+
+#光标闪烁
+            if self.focus and self.flash_sign<self.flash_sign_max:
+                pygame.draw.line(self.window,self.font_color, self.cursor_position,[self.cursor_position[0],self.cursor_position[1]+self.cursor_height], width=self.cursor_width)
+                self.flash_sign+=1
+                #self.flash_sign=0
+            elif self.focus and self.flash_sign==self.flash_sign_max:
+            	self.flash_sign=0
+
+
+    def deal_mouse_event(self,event):
+        #基本实现
+        
+        if self.rect.collidepoint(event.pos):
+            if self.focus and self.text_rect.collidepoint(event.pos):
+                now=past=self.cursor_position[0]
+                subtract_sign=add_sign=False
+                while True:
+                    if event.pos[0]>self.text_surface.get_width():
+                    	self.cursor_index=len(self.text)
+                    	break
+                    elif event.pos[0]<now:
+                        #print(self.cursor_index)
+                        self.cursor_index-=1
+                        subtract_sign=True
+                    elif event.pos[0]>now:
+                        self.cursor_index+=1
+                        add_sign=True
+                    else:
+                        break
+
+                    if subtract_sign and add_sign:
+                        if event.pos[0] < (now +past)/2 and self.cursor_position[0]>event.pos[0]:
+                            self.cursor_move_forward(1)
+                        elif event.pos[0] > (now +past)/2 and self.cursor_position[0]<event.pos[0]:
+                            self.cursor_move_back(1)
+                         
+                            #pass
+                            #self.cursor_index-=1
+                        #self.cursor_index+=1
+                        break
+
+                    past=now
+                    try:
+                        now=self.cursor_position[0]
+                    except IndexError:
+                        self.cursor_index-=1
+                        break
+
+            elif not self.focus:
+                self.focus=True
+        elif self.focus:
+            self.focus=False
+    
+    def cursor_move_forward(self,num):
+    	if self.cursor_index>=1:
+            self.cursor_index-=num
+     
+    def cursor_move_back(self,num):
+     	if len(self.text)>self.cursor_index:
+            self.cursor_index += num
+
+    def deal_keyboard_event(self,event):
+        if self.focus:
+            if event.key==pygame.K_BACKSPACE :
+                if self.cursor_index>0:
+                    del self.text[self.cursor_index-1]
+                    self.cursor_move_forward(1)
+                #except:
+                    #pass
+                        #return
+            elif event.key==pygame.K_LEFT:
+                self.cursor_move_forward(1)
+                
+            elif event.key==pygame.K_RIGHT:
+                self.cursor_move_back(1)
+            elif event.key==pygame.K_RETURN:
+                pass
+                
+            else:
+                text=event.unicode
+                if not event.unicode:
+                    try:
+                        text=chr(event.key)
+                    except ValueError:
+                        pass
+                self.text[self.cursor_index:self.cursor_index]= list(text)
+                self.cursor_index+=len(text)
+            self.text_surface=self.font.render(''.join(self.text),True, self.font_color,self.bg_font_color)
+
+
+    def check(self,event):
+        if self.start and self.event_enable:
+            if event.type==pygame.MOUSEBUTTONDOWN:
+                self.deal_mouse_event(event)
+
+            elif event.type ==pygame.KEYDOWN:
+                self.deal_keyboard_event(event)
+
+                
+
