@@ -1065,7 +1065,7 @@ class OutputBox(Control):
 
 
 class InputBox(Control):
-    def __init__(self,window,rect,text='', font=None,font_color=(0,0,0),font_size=None,bg_font_color=None,focus=False,cursor_index=0,box_line_color=(0,0,0),box_line_width=1,bg_color=(255,255,255),x_pad=2,y_pad=2,cursor_width=1,flash_sign=0,flash_sign_max=100,event_enable=True,visible=True,start=True):
+    def __init__(self,window,rect,text='', font=None,font_color=(0,0,0),font_size=None,bg_font_color=None,focus=False,cursor_index=0,box_line_color=(0,0,0),box_line_width=1,bg_color=(255,255,255),x_pad=2,y_pad=2,cursor_width=1,flash_sign=0,flash_sign_max=100,event_enable=True,visible=True,start=True,enter_callback=None):
         self.window = window
         super().__init__(window,event_enable=event_enable,visible=visible,start=start)
 
@@ -1105,6 +1105,7 @@ class InputBox(Control):
         self.flash_sign_max=flash_sign_max
         
         self.update_rect()
+        self.deal_enter_event=enter_callback
     #    self.a=0
  #       self.text_show_rect.left=self.cursor_position[0]
 
@@ -1173,7 +1174,7 @@ class InputBox(Control):
                     	self.cursor_index=len(self.text)
                     	break
                     	
-            #处理鼠标点到文字内
+                    #处理鼠标点到文字内
                     elif event.pos[0]<now:
                         #print(self.cursor_index)
                         self.cursor_index-=1
@@ -1184,15 +1185,13 @@ class InputBox(Control):
                     else:
                         break
 
+                    #终点判定即中点判定
                     if subtract_sign and add_sign:
                         if event.pos[0] < (now +past)/2 and self.cursor_position[0]>event.pos[0]:
                             self.cursor_move_forward(1)
                         elif event.pos[0] > (now +past)/2 and self.cursor_position[0]<event.pos[0]:
                             self.cursor_move_back(1)
-                         
-                            #pass
-                            #self.cursor_index-=1
-                        #self.cursor_index+=1
+
                         break
 
                     past=now
@@ -1234,7 +1233,8 @@ class InputBox(Control):
             elif event.key==pygame.K_RIGHT:
                 self.cursor_move_back(1)
             elif event.key==pygame.K_RETURN:
-                pass
+                if self.deal_enter_event:
+                    self.deal_enter_event(self)
                 
             else:
                 text=event.unicode
@@ -1248,7 +1248,17 @@ class InputBox(Control):
 #                self.cursor_index+=len(text)
 #            self.text_surface=self.font.render(''.join(self.text),True, self.font_color,self.bg_font_color)
 
+    #def deal_enter_event(self,n):
+    #    pass
 
+    def set_enter_event(self,func):
+        self.deal_enter_event=func
+
+    def clear_text(self):
+        self.text=[]
+        self.cursor_index=0
+        self.text_surface_update()
+    
     def get_text(self):
         return ''.join(self.text)
 
@@ -1256,13 +1266,15 @@ class InputBox(Control):
         text=list(text)
         self.text=text
         self.cursor_index=len(self.text)
-        self.text_surface=self.font.render(''.join(self.text),True, self.font_color,self.bg_font_color)
+        self.text_surface_update()
+        #self.text_surface=self.font.render(''.join(self.text),True, self.font_color,self.bg_font_color)
     
     def add_text(self,text):
         self.text[self.cursor_index:self.cursor_index]= list(text)
         self.cursor_index+=len(text)
         #self.text_surface=self.font.render(''.join(self.text),True, self.font_color,self.bg_font_color)
         self.text_surface_update()
+        
 
     def check(self,event):
         if self.start and self.event_enable:
