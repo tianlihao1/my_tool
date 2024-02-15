@@ -1065,12 +1065,14 @@ class OutputBox(Control):
 
 
 class InputBox(Control):
-    def __init__(self,window,rect,text='', font=None,font_color=(0,0,0),bg_font_color=None,focus=False,cursor_index=0,box_line_color=(0,0,0),box_line_width=1,bg_color=(255,255,255),x_pad=2,y_pad=2,cursor_width=1,flash_sign=0,flash_sign_max=100,event_enable=True,visible=True,start=True):
+    def __init__(self,window,rect,text='', font=None,font_color=(0,0,0),font_size=None,bg_font_color=None,focus=False,cursor_index=0,box_line_color=(0,0,0),box_line_width=1,bg_color=(255,255,255),x_pad=2,y_pad=2,cursor_width=1,flash_sign=0,flash_sign_max=100,event_enable=True,visible=True,start=True):
         self.window = window
         super().__init__(window,event_enable=event_enable,visible=visible,start=start)
+
         self.window_rect=window.get_rect()
         
         self.rect=pygame.rect.Rect(rect)
+        
 
         self.box_line_color=box_line_color
         self.box_line_width=box_line_width
@@ -1079,40 +1081,48 @@ class InputBox(Control):
         self.x_pad=x_pad+self.box_line_width
         self.y_pad=y_pad
 
-        self.font=pygame.font.Font(font,self.rect.height)
+        if font_size:
+            self.font_size=font_size
+        self.font_size=self.rect.height
+        self.font=pygame.font.Font(font,self.font_size)
 #        self.font_width,self.font_height=self.font.size()
         self.font_color=font_color
-        self.text_start_position=(self.rect.x+self.x_pad,self.rect.y+ self.y_pad)
+
         self.bg_font_color=bg_font_color
         self.text=list(text)
         
+
+        self.text_surface_update()
+        #self.text_surface=self.font.render(''.join(self.text),True, self.font_color,self.bg_font_color)
+
+        self.focus=focus
+        self.cursor_index=cursor_index
+        #self.cursor_position=[self.rect.x+self.x_pad+ self.font.render(self.text, True,(0,0,0)).get_width(),self.rect.y-self.y_pad]
+        
+
+        self.cursor_width=cursor_width
+        self.flash_sign=flash_sign
+        self.flash_sign_max=flash_sign_max
+        
+        self.update_rect()
+    #    self.a=0
+ #       self.text_show_rect.left=self.cursor_position[0]
+
+
+    def update_rect(self):
+        self.text_start_position=(self.rect.x+self.x_pad,self.rect.y+ self.y_pad)
+	
         #这是相对于self.window的rect
         self.text_rect=self.rect.copy()
         self.text_rect.x+=self.x_pad
         self.text_rect.y+=self.y_pad
         self.text_rect.width-=2*self.x_pad
         self.text_rect.height-=2*self.y_pad
-        
-
-#这是相对于self.text_surface的rect
+    
+    #这是相对于self.text_surface的rect
         self.text_show_rect=pygame.rect.Rect((0,0,self.rect.width- 2*self.x_pad,self.rect.height-2/self.y_pad))
-        self.text_surface=self.font.render(''.join(self.text),True, self.font_color,self.bg_font_color)
-
-        self.focus=focus
-        self.cursor_index=cursor_index
-        #self.cursor_position=[self.rect.x+self.x_pad+ self.font.render(self.text, True,(0,0,0)).get_width(),self.rect.y-self.y_pad]
         self.cursor_height=self.rect.height-2*self.y_pad
-
-        self.cursor_width=cursor_width
-        self.flash_sign=flash_sign
-        self.flash_sign_max=flash_sign_max
-        
-    #    self.a=0
- #       self.text_show_rect.left=self.cursor_position[0]
-
-
-
-
+    
     @property
     def cursor_position(self):
         text_width=self.font.size(''.join(self.text[:self.cursor_index]))[0]
@@ -1153,13 +1163,17 @@ class InputBox(Control):
         #基本实现
         
         if self.rect.collidepoint(event.pos):
+            #处理已经获得焦点鼠标点击文本框内事件
             if self.focus and self.text_rect.collidepoint(event.pos):
                 now=past=self.cursor_position[0]
                 subtract_sign=add_sign=False
                 while True:
-                    if event.pos[0]>self.text_surface.get_width():
+                    #处理点到文本框内文字外
+                    if event.pos[0]>self.text_rect.left+self.text_surface.get_width():
                     	self.cursor_index=len(self.text)
                     	break
+                    	
+            #处理鼠标点到文字内
                     elif event.pos[0]<now:
                         #print(self.cursor_index)
                         self.cursor_index-=1
@@ -1187,15 +1201,20 @@ class InputBox(Control):
                     except IndexError:
                         self.cursor_index-=1
                         break
-
+            #处理未获得焦点鼠标点击文本框事件
             elif not self.focus:
                 self.focus=True
+        #处理已经获得焦点鼠标点击文本框外事件
         elif self.focus:
             self.focus=False
     
     def cursor_move_forward(self,num):
     	if self.cursor_index>=1:
             self.cursor_index-=num
+            
+    def text_surface_update(self):
+        self.text_surface=self.font.render(''.join(self.text),True, self.font_color,self.bg_font_color)
+    
      
     def cursor_move_back(self,num):
      	if len(self.text)>self.cursor_index:
@@ -1207,9 +1226,8 @@ class InputBox(Control):
                 if self.cursor_index>0:
                     del self.text[self.cursor_index-1]
                     self.cursor_move_forward(1)
-                #except:
-                    #pass
-                        #return
+                    self.text_surface_update()
+                
             elif event.key==pygame.K_LEFT:
                 self.cursor_move_forward(1)
                 
@@ -1225,10 +1243,26 @@ class InputBox(Control):
                         text=chr(event.key)
                     except ValueError:
                         pass
-                self.text[self.cursor_index:self.cursor_index]= list(text)
-                self.cursor_index+=len(text)
-            self.text_surface=self.font.render(''.join(self.text),True, self.font_color,self.bg_font_color)
+                self.add_text(text)
+#                self.text[self.cursor_index:self.cursor_index]= list(text)
+#                self.cursor_index+=len(text)
+#            self.text_surface=self.font.render(''.join(self.text),True, self.font_color,self.bg_font_color)
 
+
+    def get_text(self):
+        return ''.join(self.text)
+
+    def set_text(self,text):
+        text=list(text)
+        self.text=text
+        self.cursor_index=len(self.text)
+        self.text_surface=self.font.render(''.join(self.text),True, self.font_color,self.bg_font_color)
+    
+    def add_text(self,text):
+        self.text[self.cursor_index:self.cursor_index]= list(text)
+        self.cursor_index+=len(text)
+        #self.text_surface=self.font.render(''.join(self.text),True, self.font_color,self.bg_font_color)
+        self.text_surface_update()
 
     def check(self,event):
         if self.start and self.event_enable:
