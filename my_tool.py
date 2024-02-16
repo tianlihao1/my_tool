@@ -296,6 +296,12 @@ class Radio():
 		self.member_status[member.key]=member.status
 
 	def set_layout(self,rect,layout,y_interval=0,x_interval=30):
+		'''
+		:rect	表示第1个Radio_Member的rect
+		:layout	布局接受一个列表，列表的项表示列，列表项的值，表示该列的函数。如：[2,3]表示，有两列，第1列有两行，第二列有三行
+		:y_interval	行间
+		:x_interval	列间
+		'''
 		#[2,3]
 		self.layout=[(l,j) for l , h_num in enumerate(layout) for j in range(h_num)]
 		self.rect=pygame.rect.Rect(rect)
@@ -306,6 +312,7 @@ class Radio():
 
 
 	def layout_creat(self,*args,**kargs):
+		
 		x=self.rect.x+self.layout[0][0]*self.x_interval
 		y=self.rect.y+self.layout[0][1]*self.y_interval+self.layout[0][1]*self.rect.height
 		rect=pygame.rect.Rect(x,y,*self.rect.size)
@@ -420,7 +427,7 @@ class Text(Control):
 		
 class TimingBar(Control):
 	''' 计时条 '''
-	def __init__(self,window,rect,totime,barcolor=(0,0,0),has_box_sign=True,boxcolor=(200,200,200),boxwidth=0,visible=True,start=True):
+	def __init__(self,window,rect,totime,barcolor=(0,0,0),has_box_sign=True,boxcolor=(200,200,200),boxwidth=0,backflow=True,visible=True,start=True):
 		
 		super().__init__(window=window,start=start,visible=visible)
 		
@@ -434,7 +441,7 @@ class TimingBar(Control):
 		self.endtime=0
 		
 		#执行状态，即是否正在计时
-		self.__do_sign=False
+		self.__doing_sign=False
 		#用来刻画该计时条是否已开始计时且己达到totime
 		self.__over_sign=False
 		
@@ -448,9 +455,11 @@ class TimingBar(Control):
 		#底框宽度
 		self.boxwidth=boxwidth
 	
+		#倒流,即计时条宽度随着时间的增加而减小
+		self.backflow=backflow
 	def blit(self):
 		''' 绘制函数 '''
-		if self.__do_sign:
+		if self.__doing_sign:
 			self.endtime=time.time()
 		
 		#绘制底框
@@ -460,16 +469,23 @@ class TimingBar(Control):
 		#绘制计时条
 		if self.totime >= (self.endtime - self.startime ):
 			if self.visible:
-				pygame.draw.rect(self.window,self.barcolor,(self.rect.x,self.rect.y,self.rect.width*(self.totime-self.endtime+self.startime)/self.totime,self.rect.height))
+				if self.backflow:
+					pygame.draw.rect(self.window,self.barcolor,(self.rect.x,self.rect.y,self.rect.width*(self.totime-self.endtime+self.startime)/self.totime,self.rect.height))
+				else:
+					pygame.draw.rect(self.window,self.barcolor,(self.rect.x,self.rect.y,self.rect.width*(1-(self.totime-self.endtime+self.startime)/self.totime),self.rect.height))
+					
+				
 		else:
 			self.__over_sign=True
-			self.__do_sign=False
+			self.__doing_sign=False
+			if not self.backflow and self.visible:
+				pygame.draw.rect(self.window,self.barcolor,self.rect)
 		
 
 	def do(self):
 		'''使计时条开始计时'''
 		if not self.isover():
-			self.__do_sign=True
+			self.__doing_sign=True
 			self.__over_sign=False
 			self.startime=time.time()-self.endtime+self.startime
 			if self.endtime<self.startime:
@@ -478,11 +494,11 @@ class TimingBar(Control):
 		
 	def stop(self):
 		''' 使计时条计时停止 '''
-		self.__do_sign=False
+		self.__doing_sign=False
 		
 	def turn(self):
 		''' 使计时条计时状态反转，即正在计时则变为停止计时，停止计时则变为正在计时 '''
-		if self.__do_sign:
+		if self.__doing_sign:
 			self.stop()
 		else:
 			self.do()
@@ -494,13 +510,13 @@ class TimingBar(Control):
 		
 	def isdoing(self):
 		'''返回是否正在计时'''
-		return self.__do_sign
+		return self.__doing_sign
 	
 		
 	def reset(self):
 		''' 使计时条恢复初始状态 '''
 		self.startime=self.endtime=0
-		self.__do_sign=False
+		self.__doing_sign=False
 		self.__over_sign=False
 		
 
@@ -510,69 +526,117 @@ class TimingBar(Control):
 		self.do()
 
 	def get_time(self):
-		''' 返回开始计时后的时间间隔 '''
+		''' 返回开始计时后计时的时间 '''
 		return self.endtime-self.startime
 	
 	def get_rest_time(self):
+		'''返回开始计时后距离to time还剩的时间'''
 		return self.totime-self.get_time()
 
 
 
 
-	#还有点不准
-class ETimingBar(Control):
-    num=0
-    
-    def __init__(self,window):
-        super().__init__(window)
-#        self.event_type=pygame.USEREVENT+1
-#        self.event_key=self.__get_key_num()
-#        self.TIMINGEVENT=pygame.event.Event(self.event_type,{'key':self.event_key})
-        self.TIMINGEVENT=self.__get_event_num()
-        self.check_time=1
-        
-        self.totime=10*10**3
-        self.nowtime=self.totime+self.check_time
-        
-        self.__doing_sign=False
-        self.__over_sign=False
-        self.t=0
-        
-        self.rect=pygame.rect.Rect((30,300,200,10))
-        
-        self.bgcolor=(200,200,200)
-        self.barcolor=(0,0,0)
-        
-        
-    @classmethod
-    def __get_event_num(cls):
-        cls.num+=1
-        return pygame.USEREVENT+cls.num
-    
-    def do(self):
-        if not self.__over_sign:
-            self.__doing_sign=True
-            pygame.time.set_timer(self.TIMINGEVENT,self.check_time)
-            self.t=time.time()
-    
-    def stop(self):
-        self.__doing_sign=False
-        pygame.time.set_timer(self.TIMINGEVENT,0)
-        
+	#使用pygame.time.Clock
+class CTimingBar(Control):
+#	num=0
+	
+	def __init__(self,window,rect,totime,barcolor=(0,0,0),has_box_sign=True,boxcolor=(200,200,200),boxwidth=0,backflow=True,visible=True,start=True):
+ #	   super().__init__(window)
+		self.clock=pygame.time.Clock()
+#		self.totime=3*10**3
+		self.nowtime=0
+		
+		super().__init__(window=window,start=start,visible=visible)
+		
+		self.rect=pygame.rect.Rect(rect)
+		
+		#计时条流动完所需的时间
+		self.totime=totime
+		
+				#执行状态，即是否正在计时
+		self.__doing_sign=False
+		#用来刻画该计时条是否已开始计时且己达到totime
+		self.__over_sign=False
+		
+		#计时条的颜色
+		self.barcolor=barcolor
+		
+		#计时条是否有底框
+		self.has_box_sign=has_box_sign 
+		#底框颜色
+		self.boxcolor=boxcolor
+		#底框宽度
+		self.boxwidth=boxwidth
+	
+		#倒流,即计时条宽度随着时间的增加而减小
+		self.backflow=backflow
+		
+#		self.__doing_sign=False
+#		self.__over_sign=False
+#		self.t=0
+		
+#		self.rect=pygame.rect.Rect((30,300,200,10))
+		
+#		self.bgcolor=(200,200,200)
+#		self.barcolor=(0,0,0)
+		
+#		self.backflow=backflow=True
 
-    def check(self,event):
-        if event.type==self.TIMINGEVENT:
-            self.nowtime-=self.check_time
-            if self.nowtime <=0:
-                self.__over_sign=True
-                self.stop()
-            
-        
-    def blit(self):
-        if self.visible:
-            pygame.draw.rect(self.window,self.bgcolor,self.rect)
-            if self.nowtime>0:
-                pygame.draw.rect(self.window,self.barcolor,(self.rect.x,self.rect.y,self.rect.width*self.nowtime/self.totime,self.rect.height))
+	def do(self):
+		if not self.__over_sign:
+			self.clock.tick()
+			self.__doing_sign=True
+	
+	def stop(self):
+		self.__doing_sign=False
+
+	def isover(self):
+		return self.__over_sign
+		
+	def isdoing(self):
+		return self.__doing_sign
+		
+	def reset(self):
+		self.nowtime=0
+		self.__doing_sign=False
+		self.__over_sign=False
+		
+	def reset_do(self):
+		self.reset()
+		self.do()
+		
+	
+	def turn(self):
+		''' 使计时条计时状态反转，即正在计时则变为停止计时，停止计时则变为正在计时 '''
+		if self.__doing_sign:
+			self.stop()
+		else:
+			self.do()
+		
+	def get_time(self):
+		return self.nowtime
+		
+	def get_rest_time(self):
+		return self.totime-self.nowtime
+		
+	def blit(self):
+		if self.__doing_sign:
+		   
+			self.nowtime+=self.clock.tick()
+			if self.nowtime>=self.totime:
+				self.stop()
+				self.__over_sign=True
+				
+		if self.visible:
+			#绘制底框
+			if self.has_box_sign and self.visible:
+				pygame.draw.rect(self.window,self.boxcolor,self.rect,self.boxwidth)
+			#pygame.draw.rect(self.window,self.bgcolor,self.rect)
+		 #   if self.nowtime>0:
+			if not self.backflow:
+				pygame.draw.rect(self.window,self.barcolor,(self.rect.x,self.rect.y,self.rect.width*self.nowtime/self.totime,self.rect.height))
+			elif self.nowtime<=self.totime:
+				pygame.draw.rect(self.window,self.barcolor,(self.rect.x,self.rect.y,self.rect.width*(1-self.nowtime/self.totime),self.rect.height))
 
 
 
@@ -1007,7 +1071,7 @@ class OutputBox(Control):
 		
 	def split(self,text):
 		#这里的替换实现
-		text=text.replace('\t','    ')
+		text=text.replace('\t','	')
 		text=text.split('\n')
 		line_list=[]
 		line_width=0
@@ -1065,224 +1129,224 @@ class OutputBox(Control):
 
 
 class InputBox(Control):
-    def __init__(self,window,rect,text='', font=None,font_color=(0,0,0),font_size=None,bg_font_color=None,focus=False,cursor_index=0,box_line_color=(0,0,0),box_line_width=1,bg_color=(255,255,255),x_pad=2,y_pad=2,cursor_width=1,flash_sign=0,flash_sign_max=100,event_enable=True,visible=True,start=True,enter_callback=None):
-        self.window = window
-        super().__init__(window,event_enable=event_enable,visible=visible,start=start)
+	def __init__(self,window,rect,text='', font=None,font_color=(0,0,0),font_size=None,bg_font_color=None,focus=False,cursor_index=0,box_line_color=(0,0,0),box_line_width=1,bg_color=(255,255,255),x_pad=2,y_pad=2,cursor_width=1,flash_sign=0,flash_sign_max=100,event_enable=True,visible=True,start=True,enter_callback=None):
+		self.window = window
+		super().__init__(window,event_enable=event_enable,visible=visible,start=start)
 
-        self.window_rect=window.get_rect()
-        
-        self.rect=pygame.rect.Rect(rect)
-        
+		self.window_rect=window.get_rect()
+		
+		self.rect=pygame.rect.Rect(rect)
+		
 
-        self.box_line_color=box_line_color
-        self.box_line_width=box_line_width
-        self.bg_color=bg_color
+		self.box_line_color=box_line_color
+		self.box_line_width=box_line_width
+		self.bg_color=bg_color
 
-        self.x_pad=x_pad+self.box_line_width
-        self.y_pad=y_pad
+		self.x_pad=x_pad+self.box_line_width
+		self.y_pad=y_pad
 
-        if font_size:
-            self.font_size=font_size
-        self.font_size=self.rect.height
-        self.font=pygame.font.Font(font,self.font_size)
-#        self.font_width,self.font_height=self.font.size()
-        self.font_color=font_color
+		if font_size:
+			self.font_size=font_size
+		self.font_size=self.rect.height
+		self.font=pygame.font.Font(font,self.font_size)
+#		self.font_width,self.font_height=self.font.size()
+		self.font_color=font_color
 
-        self.bg_font_color=bg_font_color
-        self.text=list(text)
-        
+		self.bg_font_color=bg_font_color
+		self.text=list(text)
+		
 
-        self.text_surface_update()
-        #self.text_surface=self.font.render(''.join(self.text),True, self.font_color,self.bg_font_color)
+		self.text_surface_update()
+		#self.text_surface=self.font.render(''.join(self.text),True, self.font_color,self.bg_font_color)
 
-        self.focus=focus
-        self.cursor_index=cursor_index
-        #self.cursor_position=[self.rect.x+self.x_pad+ self.font.render(self.text, True,(0,0,0)).get_width(),self.rect.y-self.y_pad]
-        
+		self.focus=focus
+		self.cursor_index=cursor_index
+		#self.cursor_position=[self.rect.x+self.x_pad+ self.font.render(self.text, True,(0,0,0)).get_width(),self.rect.y-self.y_pad]
+		
 
-        self.cursor_width=cursor_width
-        self.flash_sign=flash_sign
-        self.flash_sign_max=flash_sign_max
-        
-        self.update_rect()
-        self.deal_enter_event=enter_callback
-    #    self.a=0
- #       self.text_show_rect.left=self.cursor_position[0]
+		self.cursor_width=cursor_width
+		self.flash_sign=flash_sign
+		self.flash_sign_max=flash_sign_max
+		
+		self.update_rect()
+		self.deal_enter_event=enter_callback
+	#	self.a=0
+ #	   self.text_show_rect.left=self.cursor_position[0]
 
 
-    def update_rect(self):
-        self.text_start_position=(self.rect.x+self.x_pad,self.rect.y+ self.y_pad)
+	def update_rect(self):
+		self.text_start_position=(self.rect.x+self.x_pad,self.rect.y+ self.y_pad)
 	
-        #这是相对于self.window的rect
-        self.text_rect=self.rect.copy()
-        self.text_rect.x+=self.x_pad
-        self.text_rect.y+=self.y_pad
-        self.text_rect.width-=2*self.x_pad
-        self.text_rect.height-=2*self.y_pad
-    
-    #这是相对于self.text_surface的rect
-        self.text_show_rect=pygame.rect.Rect((0,0,self.rect.width- 2*self.x_pad,self.rect.height-2/self.y_pad))
-        self.cursor_height=self.rect.height-2*self.y_pad
-    
-    @property
-    def cursor_position(self):
-        text_width=self.font.size(''.join(self.text[:self.cursor_index]))[0]
-        
-        if text_width >= self.text_show_rect.width:
-            return (self.rect.right-self.x_pad, self.rect.y)
-        else:
-            return (text_width+self.rect.x+self.x_pad,self.rect.y)
+		#这是相对于self.window的rect
+		self.text_rect=self.rect.copy()
+		self.text_rect.x+=self.x_pad
+		self.text_rect.y+=self.y_pad
+		self.text_rect.width-=2*self.x_pad
+		self.text_rect.height-=2*self.y_pad
+	
+	#这是相对于self.text_surface的rect
+		self.text_show_rect=pygame.rect.Rect((0,0,self.rect.width- 2*self.x_pad,self.rect.height-2/self.y_pad))
+		self.cursor_height=self.rect.height-2*self.y_pad
+	
+	@property
+	def cursor_position(self):
+		text_width=self.font.size(''.join(self.text[:self.cursor_index]))[0]
+		
+		if text_width >= self.text_show_rect.width:
+			return (self.rect.right-self.x_pad, self.rect.y)
+		else:
+			return (text_width+self.rect.x+self.x_pad,self.rect.y)
 
-    def blit(self):
-        if self.visible:
-      #      pygame.draw.line(self.window,self.font_color, self.cursor_position,[self.cursor_position[0],self.cursor_position[1]+self.cursor_height], width=self.cursor_width)
+	def blit(self):
+		if self.visible:
+	  #	  pygame.draw.line(self.window,self.font_color, self.cursor_position,[self.cursor_position[0],self.cursor_position[1]+self.cursor_height], width=self.cursor_width)
 #背景框
-            pygame.draw.rect(self.window,self.bg_color,self.rect)
+			pygame.draw.rect(self.window,self.bg_color,self.rect)
 #线框
-            pygame.draw.rect(self.window,self.box_line_color,self.rect\
-                ,self.box_line_width)
+			pygame.draw.rect(self.window,self.box_line_color,self.rect\
+				,self.box_line_width)
 #文本
-#            self.blit(self.font.render(''.join(self.text), True, self.font_color, background=self.bg_font_color),self.text_start_position)
+#			self.blit(self.font.render(''.join(self.text), True, self.font_color, background=self.bg_font_color),self.text_start_position)
 
-            text_width=self.font.size(''.join(self.text[:self.cursor_index]))[0]
-            if text_width<self.text_show_rect.width:
-                self.text_show_rect.left=0
-            else:
-                self.text_show_rect.right=text_width
-            self.window.blit(self.text_surface,self.text_start_position, self.text_show_rect)
+			text_width=self.font.size(''.join(self.text[:self.cursor_index]))[0]
+			if text_width<self.text_show_rect.width:
+				self.text_show_rect.left=0
+			else:
+				self.text_show_rect.right=text_width
+			self.window.blit(self.text_surface,self.text_start_position, self.text_show_rect)
 
 #光标闪烁
-            if self.focus and self.flash_sign<self.flash_sign_max:
-                pygame.draw.line(self.window,self.font_color, self.cursor_position,[self.cursor_position[0],self.cursor_position[1]+self.cursor_height], width=self.cursor_width)
-                self.flash_sign+=1
-                #self.flash_sign=0
-            elif self.focus and self.flash_sign==self.flash_sign_max:
-            	self.flash_sign=0
+			if self.focus and self.flash_sign<self.flash_sign_max:
+				pygame.draw.line(self.window,self.font_color, self.cursor_position,[self.cursor_position[0],self.cursor_position[1]+self.cursor_height], width=self.cursor_width)
+				self.flash_sign+=1
+				#self.flash_sign=0
+			elif self.focus and self.flash_sign==self.flash_sign_max:
+				self.flash_sign=0
 
 
-    def deal_mouse_event(self,event):
-        #基本实现
-        
-        if self.rect.collidepoint(event.pos):
-            #处理已经获得焦点鼠标点击文本框内事件
-            if self.focus and self.text_rect.collidepoint(event.pos):
-                now=past=self.cursor_position[0]
-                subtract_sign=add_sign=False
-                while True:
-                    #处理点到文本框内文字外
-                    if event.pos[0]>self.text_rect.left+self.text_surface.get_width():
-                    	self.cursor_index=len(self.text)
-                    	break
-                    	
-                    #处理鼠标点到文字内
-                    elif event.pos[0]<now:
-                        #print(self.cursor_index)
-                        self.cursor_index-=1
-                        subtract_sign=True
-                    elif event.pos[0]>now:
-                        self.cursor_index+=1
-                        add_sign=True
-                    else:
-                        break
+	def deal_mouse_event(self,event):
+		#基本实现
+		
+		if self.rect.collidepoint(event.pos):
+			#处理已经获得焦点鼠标点击文本框内事件
+			if self.focus and self.text_rect.collidepoint(event.pos):
+				now=past=self.cursor_position[0]
+				subtract_sign=add_sign=False
+				while True:
+					#处理点到文本框内文字外
+					if event.pos[0]>self.text_rect.left+self.text_surface.get_width():
+						self.cursor_index=len(self.text)
+						break
+						
+					#处理鼠标点到文字内
+					elif event.pos[0]<now:
+						#print(self.cursor_index)
+						self.cursor_index-=1
+						subtract_sign=True
+					elif event.pos[0]>now:
+						self.cursor_index+=1
+						add_sign=True
+					else:
+						break
 
-                    #终点判定即中点判定
-                    if subtract_sign and add_sign:
-                        if event.pos[0] < (now +past)/2 and self.cursor_position[0]>event.pos[0]:
-                            self.cursor_move_forward(1)
-                        elif event.pos[0] > (now +past)/2 and self.cursor_position[0]<event.pos[0]:
-                            self.cursor_move_back(1)
+					#终点判定即中点判定
+					if subtract_sign and add_sign:
+						if event.pos[0] < (now +past)/2 and self.cursor_position[0]>event.pos[0]:
+							self.cursor_move_forward(1)
+						elif event.pos[0] > (now +past)/2 and self.cursor_position[0]<event.pos[0]:
+							self.cursor_move_back(1)
 
-                        break
+						break
 
-                    past=now
-                    try:
-                        now=self.cursor_position[0]
-                    except IndexError:
-                        self.cursor_index-=1
-                        break
-            #处理未获得焦点鼠标点击文本框事件
-            elif not self.focus:
-                self.focus=True
-        #处理已经获得焦点鼠标点击文本框外事件
-        elif self.focus:
-            self.focus=False
-    
-    def cursor_move_forward(self,num):
-    	if self.cursor_index>=1:
-            self.cursor_index-=num
-            
-    def text_surface_update(self):
-        self.text_surface=self.font.render(''.join(self.text),True, self.font_color,self.bg_font_color)
-    
-     
-    def cursor_move_back(self,num):
-     	if len(self.text)>self.cursor_index:
-            self.cursor_index += num
+					past=now
+					try:
+						now=self.cursor_position[0]
+					except IndexError:
+						self.cursor_index-=1
+						break
+			#处理未获得焦点鼠标点击文本框事件
+			elif not self.focus:
+				self.focus=True
+		#处理已经获得焦点鼠标点击文本框外事件
+		elif self.focus:
+			self.focus=False
+	
+	def cursor_move_forward(self,num):
+		if self.cursor_index>=1:
+			self.cursor_index-=num
+			
+	def text_surface_update(self):
+		self.text_surface=self.font.render(''.join(self.text),True, self.font_color,self.bg_font_color)
+	
+	 
+	def cursor_move_back(self,num):
+		if len(self.text)>self.cursor_index:
+			self.cursor_index += num
 
-    def deal_keyboard_event(self,event):
-        if self.focus:
-            if event.key==pygame.K_BACKSPACE :
-                if self.cursor_index>0:
-                    del self.text[self.cursor_index-1]
-                    self.cursor_move_forward(1)
-                    self.text_surface_update()
-                
-            elif event.key==pygame.K_LEFT:
-                self.cursor_move_forward(1)
-                
-            elif event.key==pygame.K_RIGHT:
-                self.cursor_move_back(1)
-            elif event.key==pygame.K_RETURN:
-                if self.deal_enter_event:
-                    self.deal_enter_event(self)
-                
-            else:
-                text=event.unicode
-                if not event.unicode:
-                    try:
-                        text=chr(event.key)
-                    except ValueError:
-                        pass
-                self.add_text(text)
-#                self.text[self.cursor_index:self.cursor_index]= list(text)
-#                self.cursor_index+=len(text)
-#            self.text_surface=self.font.render(''.join(self.text),True, self.font_color,self.bg_font_color)
+	def deal_keyboard_event(self,event):
+		if self.focus:
+			if event.key==pygame.K_BACKSPACE :
+				if self.cursor_index>0:
+					del self.text[self.cursor_index-1]
+					self.cursor_move_forward(1)
+					self.text_surface_update()
+				
+			elif event.key==pygame.K_LEFT:
+				self.cursor_move_forward(1)
+				
+			elif event.key==pygame.K_RIGHT:
+				self.cursor_move_back(1)
+			elif event.key==pygame.K_RETURN:
+				if self.deal_enter_event:
+					self.deal_enter_event(self)
+				
+			else:
+				text=event.unicode
+				if not event.unicode:
+					try:
+						text=chr(event.key)
+					except ValueError:
+						pass
+				self.add_text(text)
+#				self.text[self.cursor_index:self.cursor_index]= list(text)
+#				self.cursor_index+=len(text)
+#			self.text_surface=self.font.render(''.join(self.text),True, self.font_color,self.bg_font_color)
 
-    #def deal_enter_event(self,n):
-    #    pass
+	#def deal_enter_event(self,n):
+	#	pass
 
-    def set_enter_event(self,func):
-        self.deal_enter_event=func
+	def set_enter_event(self,func):
+		self.deal_enter_event=func
 
-    def clear_text(self):
-        self.text=[]
-        self.cursor_index=0
-        self.text_surface_update()
-    
-    def get_text(self):
-        return ''.join(self.text)
+	def clear_text(self):
+		self.text=[]
+		self.cursor_index=0
+		self.text_surface_update()
+	
+	def get_text(self):
+		return ''.join(self.text)
 
-    def set_text(self,text):
-        text=list(text)
-        self.text=text
-        self.cursor_index=len(self.text)
-        self.text_surface_update()
-        #self.text_surface=self.font.render(''.join(self.text),True, self.font_color,self.bg_font_color)
-    
-    def add_text(self,text):
-        self.text[self.cursor_index:self.cursor_index]= list(text)
-        self.cursor_index+=len(text)
-        #self.text_surface=self.font.render(''.join(self.text),True, self.font_color,self.bg_font_color)
-        self.text_surface_update()
-        
+	def set_text(self,text):
+		text=list(text)
+		self.text=text
+		self.cursor_index=len(self.text)
+		self.text_surface_update()
+		#self.text_surface=self.font.render(''.join(self.text),True, self.font_color,self.bg_font_color)
+	
+	def add_text(self,text):
+		self.text[self.cursor_index:self.cursor_index]= list(text)
+		self.cursor_index+=len(text)
+		#self.text_surface=self.font.render(''.join(self.text),True, self.font_color,self.bg_font_color)
+		self.text_surface_update()
+		
 
-    def check(self,event):
-        if self.start and self.event_enable:
-            if event.type==pygame.MOUSEBUTTONDOWN:
-                self.deal_mouse_event(event)
+	def check(self,event):
+		if self.start and self.event_enable:
+			if event.type==pygame.MOUSEBUTTONDOWN:
+				self.deal_mouse_event(event)
 
-            elif event.type ==pygame.KEYDOWN:
-                self.deal_keyboard_event(event)
+			elif event.type ==pygame.KEYDOWN:
+				self.deal_keyboard_event(event)
 
-                
+				
 
