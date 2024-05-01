@@ -638,7 +638,62 @@ class CTimingBar(Control):
 			elif self.nowtime<=self.totime:
 				pygame.draw.rect(self.window,self.barcolor,(self.rect.x,self.rect.y,self.rect.width*(1-self.nowtime/self.totime),self.rect.height))
 
+class Timing():
+	def __init__(self,aimtime,loops=1):
+		self.aimtime=aimtime
+		self.loops=loops
+		self.now_loop_num=1
+		self.nowtime=0
+		self.clock=pygame.time.Clock()
+		self.__doing_sign=False
+		self.__over_sign=False
+		
+	def check(self):
+		if self.__doing_sign and not self.__over_sign:
+			self.nowtime+=self.clock.tick()
+			
+			if self.nowtime>self.aimtime:
+				
+				if self.now_loop_num<=self.loops or self.loops==-1:
+					self.nowtime=0
+					self.now_loop_num+=1
+					return True
+				self.__doing_sign=False
+				self.__over_sign=True
+				return True
+		return False
+			
+	
+	def do(self):
+#		if not self.__over_sign:
+		self.clock.tick()
+		self.__doing_sign=True
+	
+	def stop(self):
+		self.__doing_sign=False
 
+	def isover(self):
+		return self.__over_sign
+		
+	def isdoing(self):
+		return self.__doing_sign
+		
+	def reset(self):
+		self.nowtime=0
+		self.__doing_sign=False
+		self.__over_sign=False
+		
+	def reset_do(self):
+		self.reset()
+		self.do()
+		
+	
+	def turn(self):
+		''' 使计时条计时状态反转，即正在计时则变为停止计时，停止计时则变为正在计时 '''
+		if self.__doing_sign:
+			self.stop()
+		else:
+			self.do()
 
 
 class ScrollBar(Control):
@@ -1044,7 +1099,7 @@ class OutputBox(Control):
 	def __init__(self,window,event_enable=True,visible=True,start=True):
 		super().__init__(window,event_enable=event_enable,visible=visible,start=start)
 
-		self.rect=pygame.rect.Rect((0,0,300,300))
+		self.rect=pygame.rect.Rect((200,600,300,300))
 
 		self.scrollbar_width=30
 
@@ -1101,7 +1156,8 @@ class OutputBox(Control):
 		
 	
 	def add(self,text):
-		text=self.text[-1]+text
+		if self.text:
+			text=self.text[-1]+text
 		text=self.split(text)
 		self.text[-1:]=text
 		self.scrollbar.update(extend=(0,len(self.text)))
@@ -1117,16 +1173,15 @@ class OutputBox(Control):
 				break
 		self.window.blit(self.output_surface,self.output_rect)
 		pygame.draw.rect(self.window,self.box_line_color,self.rect,1)
-		self.scrollbar.blit()
+		#self.scrollbar.blit()
 			  
 	
 	def check(self,event):
 		self.scrollbar.check(event)
 		
-	def move(self,x=0,y=0):
-		super().move(x,y)
-		self.update_rect()
-
+	def update_text(self,text):
+		self.text=[]
+		self.add(text)
 
 
 
