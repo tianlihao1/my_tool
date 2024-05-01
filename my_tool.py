@@ -1041,8 +1041,8 @@ class Dice_Group():
 		return self.member[index]
 
 class OutputBox(Control):
-	def __init__(self,window):
-		super().__init__(window)
+	def __init__(self,window,event_enable=True,visible=True,start=True):
+		super().__init__(window,event_enable=event_enable,visible=visible,start=start)
 
 		self.rect=pygame.rect.Rect((0,0,300,300))
 
@@ -1093,9 +1093,9 @@ class OutputBox(Control):
 	
 	
 	def update_rect(self):
-		self.output_rect=pygame.rect.Rect((*self.rect.topright,self.rect.width-self.scrollbar_width))
+		self.output_rect=pygame.rect.Rect((*self.rect.topleft,self.rect.width-self.scrollbar_width,self.rect.height))
 
-		self.scrollbar_rect=pygame.rect.Rect((*self.output_rect.topleft,self.scrollbar_width,self.rect.height))
+		self.scrollbar_rect=pygame.rect.Rect((*self.output_rect.topright,self.scrollbar_width,self.rect.height))
 		
 		self.scrollbar.update(rect=self.scrollbar_rect)
 		
@@ -1123,6 +1123,9 @@ class OutputBox(Control):
 	def check(self,event):
 		self.scrollbar.check(event)
 		
+	def move(self,x=0,y=0):
+		super().move(x,y)
+		self.update_rect()
 
 
 
