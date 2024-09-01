@@ -50,7 +50,7 @@ class Container():
 			item.event_enable=status
 
 	def __iter__(self):
-		return self.member
+		return self.member.__iter__()
 
 	def blit(self):
 		for name in self.member_name_sort[::-1]:
