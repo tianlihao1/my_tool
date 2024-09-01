@@ -5,6 +5,15 @@ import random
 import math
 
 pygame.init()
+#print(os.path.split(os.getcwd()))
+
+DEFAULT_RES_PATH=os.path.join(os.path.dirname(os.path.realpath(__file__)),'res')
+
+DEFAULT_FONT_PATH=os.path.join(DEFAULT_RES_PATH,'font','SourceHanSerifCN','Regular.otf')
+
+DEFAULT_PIC_PATH=os.path.join(DEFAULT_RES_PATH,'pic')
+
+#print(DEFAULT_FONT_PATH)
 
 def round(value,precision):
 	value=value/precision
@@ -62,7 +71,7 @@ class Control():
 		for name,value in kargs.items():
 			setattr(self,name,value)
 		self.update_rect()
-
+    
 
 
 	def move(self,x=0,y=0):
@@ -85,7 +94,18 @@ class Control():
 			self.start=not self.start
 		else:
 			self.start=status
-
+			
+	def layout_init(self,common=None,move=None):
+		if not common is None:
+			self.set_common(*common)
+		if not move is None:
+			self.move(*move)
+			
+	def check(self,event):
+		pass
+	
+	def blit(self):
+		pass
 
 class Button(Control):
 	'''
@@ -99,13 +119,13 @@ class Button(Control):
 		rect：		   按钮的坐标和大小（按钮的rect对象）
 		title：		   按钮上的文字,默认为'按钮'
 		font:			 按钮文字字体文件路径
-		bgcolor:	   按钮当前颜色
+		bg_color:	   按钮当前颜色
 		text_color:	   按钮字体的颜色
 		font_size：	 按钮字体的大小，默认为None
 		start:			 按钮的启用状态
 		down：		按钮是否按下
 	'''
-	def __init__(self,window,rect,text='按钮',font='./res/font/SourceHanSerifCN/Regular.otf',bgcolor=(0,0,0),image=None,text_color=(255,255,255),font_size=None,covering_color=(255,255,255),event_enable=True,visible=True,start=True):
+	def __init__(self,window,rect,text='按钮',font=DEFAULT_FONT_PATH,bg_color=(0,0,0),image=None,text_color=(255,255,255),font_size=None,covering_color=(255,255,255),event_enable=True,visible=True,start=True):
 		
 		super().__init__(window,event_enable,visible,start)
 
@@ -116,9 +136,9 @@ class Button(Control):
 		self.text=text
 
 		#按钮颜色
-		self.bgcolor=bgcolor
+		self.bg_color=bg_color
 		
-		self.up_bgcolor=bgcolor
+		self.up_bgcolor=bg_color
 
 		#按钮图片
 		self.image=None
@@ -161,7 +181,7 @@ class Button(Control):
 			if self.image:
 				self.window.blit(self.image,self.rect)
 			else:
-				pygame.draw.rect(self.window,self.bgcolor,self.rect)
+				pygame.draw.rect(self.window,self.bg_color,self.rect)
 			
 			#点击时覆盖层绘制
 			if self.down:
@@ -202,7 +222,7 @@ class Button(Control):
 
 
 class Radio_Member(Control):
-	def __init__(self,window,key,rect,text=None,font='./res/font/SourceHanSerifCN/Regular.otf',text_color=(0,0,0),bg_color=None,up=None,down=None,status=False,event_enable=True,visible=True,start=True):
+	def __init__(self,window,key,rect,text=None,font=DEFAULT_FONT_PATH,text_color=(0,0,0),bg_color=None,up=None,down=None,status=False,event_enable=True,visible=True,start=True):
 		self.key=key
 		
 		super().__init__(window,event_enable,visible,start)
@@ -371,7 +391,8 @@ class Radio():
 		del self.member_status[key]
 		
 class Text(Control):
-	def __init__(self,window,text,site,font='./res/font/SourceHanSerifCN/Regular.otf',font_size=30,text_color=(0,0,0),bg_color=None,be_moved_box=False,box_color=None,start=True):
+	def __init__(self,window,text,site,font=DEFAULT_FONT_PATH,font_size=30,text_color=(0,0,0),bg_color=None,has_box=False,has_mouse_inside_box=False,box_color=None,common=None,move=None,start=True):
+		super().__init__(window)
 		self.window=window
 
 		self.window_rect=self.window.get_rect()
@@ -385,8 +406,10 @@ class Text(Control):
 		self.text_color=text_color
 
 		self.bg_color=bg_color
+		
+		self.has_box=has_box
 
-		self.be_moved_box=be_moved_box
+		self.has_mouse_inside_box=has_mouse_inside_box
 
 		if not box_color:
 			box_color=self.text_color
@@ -400,24 +423,28 @@ class Text(Control):
 		self.rect=self.text_image.get_rect()
 		self.rect.x,self.rect.y=site
 		
+		self.layout_init(common,move)
+		
 		
 	def blit(self):
 		if self.start:
 			#text=self.font.render(self.text,True,self.text_color,self.bg_color)
 			self.window.blit(self.text_image,self.rect)
 			
-			if self.mouse_inside and self.be_moved_box:
+			if (self.mouse_inside and self.has_mouse_inside_box) or self.has_box:
 				pygame.draw.rect(self.window,self.box_color,self.rect,width=1)
 
 	def check(self , event):
-		if self.start:
-			if self.rect.collidepoint(event.pos):
+		if self.start and self.event_enable:
+			
+			if event.type==pygame.MOUSEMOTION and self.rect.collidepoint(event.pos):
 				self.mouse_inside = True
 				if event.type == pygame.MOUSEBUTTONDOWN:
 					return True
 			else:
 				self.mouse_inside=False
 			return False
+			
 	def update(self, **kargs):
 		super().update(**kargs)
 		self.text_image=self.font.render(self.text,True,self.text_color,self.bg_color)
@@ -639,31 +666,40 @@ class CTimingBar(Control):
 				pygame.draw.rect(self.window,self.barcolor,(self.rect.x,self.rect.y,self.rect.width*(1-self.nowtime/self.totime),self.rect.height))
 
 class Timing():
-	def __init__(self,aimtime,loops=1):
+	def __init__(self,aimtime,loops=1,callback_function=None):
 		self.aimtime=aimtime
 		self.loops=loops
 		self.now_loop_num=1
 		self.nowtime=0
+		self.callback_function=callback_function
 		self.clock=pygame.time.Clock()
 		self.__doing_sign=False
 		self.__over_sign=False
 		
-	def check(self):
+	def check(self,event=None):
 		if self.__doing_sign and not self.__over_sign:
 			self.nowtime+=self.clock.tick()
 			
 			if self.nowtime>self.aimtime:
-				
-				if self.now_loop_num<=self.loops or self.loops==-1:
+
+				if self.now_loop_num<self.loops or self.loops==-1:
 					self.nowtime=0
 					self.now_loop_num+=1
-					return True
-				self.__doing_sign=False
-				self.__over_sign=True
+					#return True
+				else:
+					self.__doing_sign=False
+					self.__over_sign=True
+				if self.callback_function:
+					self.callback_function(self)
 				return True
 		return False
 			
-	
+	def get_now_loop_num(self):
+		return self.now_loop_num
+
+	def get_rest_loop_num(self):
+		return self.loops-self.get_now_loop_num()
+
 	def do(self):
 #		if not self.__over_sign:
 		self.clock.tick()
@@ -680,14 +716,27 @@ class Timing():
 		
 	def reset(self):
 		self.nowtime=0
+		self.now_loop_num=1
 		self.__doing_sign=False
 		self.__over_sign=False
 		
 	def reset_do(self):
 		self.reset()
 		self.do()
+
+	def set_loops(self,loops):
+		self.now_loop_num=1
+		self.loops=loops
 		
-	
+	def set_callback_function(self,function):
+		self.callback_function=function
+
+	def get_rest_time(self):
+		return self.aimtime-self.nowtime
+
+	def get_time(self):
+		return self.nowtime
+
 	def turn(self):
 		''' 使计时条计时状态反转，即正在计时则变为停止计时，停止计时则变为正在计时 '''
 		if self.__doing_sign:
@@ -695,6 +744,8 @@ class Timing():
 		else:
 			self.do()
 
+	def blit(self):
+		pass
 
 class ScrollBar(Control):
 	''' 滚动条 '''
@@ -978,7 +1029,7 @@ class Animations(Control):
 		
 		
 class Dice(Control):
-	def __init__(self,window,rect,box_width=2,box_color=(0,0,0),time_break=1,start=True):
+	def __init__(self,window,rect,box_width=2,box_color=(0,0,0),time_break=1,pic_path=None,start=True):
 		super().__init__(window,start=start)
 		
 		self.rect=pygame.rect.Rect(rect)
@@ -990,7 +1041,12 @@ class Dice(Control):
 		self.dice_rect.size=(self.rect.size[0]-self.box_width,self.rect.size[1]-self.box_width)
 		self.dice_rect.center=self.rect.center
 		
-		self.image_list=[pygame.transform.scale(pygame.image.load('./res/pic/骰子/'+i).convert(),self.dice_rect.size) for i in os.listdir('./res/pic/骰子/')]
+		if pic_path:
+			self.pic_path=pic_path
+		else:
+			self.pic_path=os.path.join(DEFAULT_PIC_PATH,'骰子')
+
+		self.image_list=[pygame.transform.scale(pygame.image.load(os.path.join(self.pic_path,i)).convert(),self.dice_rect.size) for i in os.listdir(self.pic_path)]
 		
 		self.sign=0
 		
@@ -1111,7 +1167,7 @@ class OutputBox(Control):
 		
 		self.box_line_color=(0,0,0)
 
-		self.font=pygame.font.Font('./res/font/SourceHanSerifCN/Regular.otf',self.font_size)
+		self.font=pygame.font.Font(DEFAULT_FONT_PATH,self.font_size)
 
 		self.output_rect=pygame.rect.Rect((*self.rect.topleft,self.rect.width-self.scrollbar_width,self.rect.height))
 		
@@ -1205,7 +1261,8 @@ class InputBox(Control):
 
 		if font_size:
 			self.font_size=font_size
-		self.font_size=self.rect.height
+		else:
+			self.font_size=self.rect.height
 		self.font=pygame.font.Font(font,self.font_size)
 #		self.font_width,self.font_height=self.font.size()
 		self.font_color=font_color
