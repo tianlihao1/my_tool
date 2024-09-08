@@ -1,7 +1,7 @@
 from Container import *
 import pygame
 
-class Page(Container):
+class Frame(Container):
 	def __init__(self,window,has_bg=True,bgcolor=(255,255,255), bg_image=None, is_image_scale=True,name=None,father=None):
 		super().__init__()
 		self.window=window
@@ -12,6 +12,7 @@ class Page(Container):
 				father.add(self,name)
 			else:
 				father.add(self)
+		self.rect=None
 		self.has_bg_sign=has_bg
 		self.bgcolor=bgcolor
 		self.bg_surface=pygame.surface.Surface(self.window_rect.size)
@@ -33,8 +34,23 @@ class Page(Container):
 
 	def stop(self):
 		for i in self.member.keys():
-			i.stop()
+			try:
+				i.stop()
+			except AttributeError:
+				pass
 
-	def start(self):
+	def start(self):#要改
 		for i in self.member.keys():
-			i.start()
+			try:
+				i.do()
+			except AttributeError:
+				pass
+
+	def add(self,object,name=None,auto_give_name=True):
+		ob_rect=getattr(object,'rect',None)
+		if not ob_rect is None:
+			try:
+				self.rect.union_ip(ob_rect)
+			except AttributeError:
+				self.rect=ob_rect.copy()
+		self.add(object,name,auto_give_name)
