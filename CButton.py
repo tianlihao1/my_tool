@@ -2,8 +2,10 @@ import pygame
 from my_tool import Control
 import os
 
-DEFAULT_RES_PATH=os.path.join(os.path.dirname(os.path.realpath(__file__)),'res','font','SourceHanSerifCN')
-DEFAULT_FONT_PATH=os.path.join(DEFAULT_RES_PATH,'Regular.otf')
+
+DEFAULT_RES_PATH=os.path.join(os.path.dirname(os.path.realpath(__file__)),'res')
+
+DEFAULT_FONT_PATH=os.path.join(DEFAULT_RES_PATH,'font','SourceHanSerifCN','Regular.otf')
 
 class Button(Control):
 	'''

@@ -1,4 +1,4 @@
-import Container*
+from Container import *
 import pygame
 
 class Page(Container):

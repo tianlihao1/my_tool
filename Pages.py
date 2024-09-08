@@ -48,11 +48,11 @@ class Pages(Container):
 	def add(self,object,name=None,auto_give_name=True):
 		if not self.now_page:
 			self.now_page=object
-		object.father=self
+		#object.father=self
 		name=super().add(object,name,auto_give_name)
 		#print(name)
 		#1/0
-		object.name=name
+		#object.name=name
 		self.change_page_event_dict[name]=[]
 
 	def update(self,*args,**kargs):
@@ -75,3 +75,16 @@ class Pages(Container):
 		for func,next_page in self.change_page_event_dict[self.now_page.name]:
 			if func():
 				self.next_to(next_page)
+
+	def run(self):
+		while True:
+			for event in pygame.event.get():
+				if event.type==pygame.QUIT:
+					exit()
+				else:
+
+					self.check(event)
+
+			self.update()
+			self.blit()
+			pygame.display.update()

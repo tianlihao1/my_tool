@@ -17,11 +17,14 @@ class Container():
 	def add(self,object,name=None,auto_give_name=True):
 #		if name!=None:
 #			self.member_name_sort.append(name)
+		
 		if (name is None) and auto_give_name:
 			name=self.auto_give_name()
 		
 		self.member_name_sort.append(name)
 		self.member[name]=object
+		object.father=self
+		object.name=name
 
 		return name
 
@@ -80,6 +83,6 @@ class Container():
 
 					self.check(event)
 
-			self.update()
+			#self.update()
 			self.blit()
 			pygame.display.update()

@@ -676,7 +676,26 @@ class Timing():
 		self.__doing_sign=False
 		self.__over_sign=False
 		
-	def check(self,event=None):
+	# def check(self,event=None):
+	# 	if self.__doing_sign and not self.__over_sign:
+	# 		self.nowtime+=self.clock.tick()
+			
+	# 		if self.nowtime>self.aimtime:
+
+	# 			if self.now_loop_num<self.loops or self.loops==-1:
+	# 				self.nowtime=0
+	# 				self.now_loop_num+=1
+	# 				#return True
+	# 			else:
+	# 				self.__doing_sign=False
+	# 				self.__over_sign=True
+	# 			if self.callback_function:
+	# 				self.callback_function(self)
+	# 			return True
+	# 	return False
+		
+	
+	def blit(self):
 		if self.__doing_sign and not self.__over_sign:
 			self.nowtime+=self.clock.tick()
 			
@@ -691,8 +710,8 @@ class Timing():
 					self.__over_sign=True
 				if self.callback_function:
 					self.callback_function(self)
-				return True
-		return False
+				#return True
+		#return False
 			
 	def get_now_loop_num(self):
 		return self.now_loop_num
