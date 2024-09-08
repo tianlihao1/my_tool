@@ -54,3 +54,11 @@ class Frame(Container):
 			except AttributeError:
 				self.rect=ob_rect.copy()
 		self.add(object,name,auto_give_name)
+		
+	def move(self,x=0,y=0):
+		if x or y:
+			for i in self.member.values():
+				i.move(x,y)
+	
+#	def set_common(self,*args,**kargs):
+		
