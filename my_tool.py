@@ -3,6 +3,8 @@ import pygame
 import os
 import random
 import math
+from Frame import Frame
+from Group import Group
 
 pygame.init()
 #print(os.path.split(os.getcwd()))
@@ -1341,25 +1343,29 @@ class Dice(Control):
 		self.time_break=time
 		
 		
-class Dice_Group():
+class Dice_Group(Group):
 	def __init__(self,window,rect,layout,box_width=2,box_color=(0,0,0),time_break=1,start=True):
-		self.window=window
+		super().__init__(window)
+		#self.window=window
 			
 		self.member={}
 			
 		self.rect=pygame.rect.Rect(rect)
-			
+		
+		#self.pic_path=os.path.join(DEFAULT_PIC_PATH,'骰子')
+		#print(self.pic_path)
 		for num,L in enumerate(layout):
 			for H in range(L):
-				self.member[(H,num)]=Dice(self.window,(self.rect.x+num*self.rect.width,self.rect.y+H*self.rect.height,*self.rect.size),box_width,box_color,time_break,start)
+				#self.member
+				self.add(Dice(self.window,(self.rect.x+num*self.rect.width,self.rect.y+H*self.rect.height,*self.rect.size),box_width,box_color,time_break,start=start),(num,H))
 			
-			
-	def blit(self):
-		for i in self.member.values():
-			i.blit()
-		
+		#	
+#	def blit(self):
+#		for i in self.member.values():
+#			i.blit()
+#		
 	#	0/0
-				
+		
 	def do(self):
 		for i in self.member.values():
 			i.do()
@@ -1384,10 +1390,10 @@ class Dice_Group():
 		return num_dict
 		
 		
-	def move(self,x=0,y=0):
-		for i in self.member.values():
-			i.move(x,y)			
-			
+#	def move(self,x=0,y=0):
+#		for i in self.member.values():
+#			i.move(x,y)			
+#			
 	def __getitem__(self, index):  # 1).索引值的获取
 		return self.member[index]
 
