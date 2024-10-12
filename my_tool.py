@@ -39,13 +39,13 @@ def floor(value,precision):
 
 class Control():
 	
-	def __init__(self,window=None,event_enable=True,visible=True,start=True):
+	def __init__(self,window=None,event_enable=True,visible=True,disable=False):
 		
 		self.window_rect=window.get_rect()
 		self.window=window
 		self.event_enable=event_enable
 		self.visible=visible
-		self.start=start
+		self.disable=disable
 	
 	def set_common(self,*args,aim_object=None,object=None):
 		'''
@@ -93,9 +93,9 @@ class Control():
 	def change_status(self,status=None):
 		'''这是改变开启状态的方法'''
 		if status==None:
-			self.start=not self.start
+			self.disable=not self.disable
 		else:
-			self.start=status
+			self.disable=status
 			
 	def layout_init(self,common=None,move=None):
 		if not common is None:
@@ -126,12 +126,12 @@ class Button(Control):
 		bg_color:	   按钮当前颜色
 		text_color:	   按钮字体的颜色
 		font_size：	 按钮字体的大小，默认为None
-		start:			 按钮的启用状态
+		disable:			 按钮的启用状态
 		mouse_down：		按钮被鼠标是否按下
 	'''
-	def __init__(self,window,rect,text='按钮',font=DEFAULT_FONT_PATH,has_bg=True,bg_color=(0,0,0),  image=None,is_image_scale=True, text_color=(255,255,255), font_size=None,cover_surface_color=(255,255,255),cover_surface_alpha=100, association_key_event=None,common=None,move=None,callback_function=None,event_enable=True,visible=True,start=True):
+	def __init__(self,window,rect,text='按钮',font=DEFAULT_FONT_PATH,has_bg=True,bg_color=(0,0,0),  image=None,is_image_scale=True, text_color=(255,255,255), font_size=None,cover_surface_color=(255,255,255),cover_surface_alpha=100, association_key_event=None,common=None,move=None,callback_function=None,event_enable=True,visible=True,disable=False):
 		
-		super().__init__(window,event_enable,visible,start)
+		super().__init__(window,event_enable,visible,disable)
 
 		#按钮矩形空间
 		self.rect=pygame.Rect(rect)
@@ -217,7 +217,7 @@ class Button(Control):
 		self.callback_function=callback_function
 
 		#是否启用
-		self.start=start
+		self.disable=disable
 		self.layout_init(common,move)
 
 		#self.update_image()
@@ -248,7 +248,7 @@ class Button(Control):
 
 	def blit(self):
 		#判断是否启用
-		if self.start and self.visible:
+		if (not self.disable) and self.visible:
 
 			
 			#blit bg
@@ -271,7 +271,7 @@ class Button(Control):
 		self.pressdown_sign=False
 
 		#判断按钮是否禁用
-		if self.start and self.event_enable:
+		if (not self.disable) and self.event_enable:
 			#检测键盘事件
 			if self.key_press_dict:
 				key_pressed=pygame.key.get_pressed()
@@ -433,7 +433,7 @@ class Button(Control):
 	def update(self,*args,**kargs):
 		'''本方法只能能改
 key_press_dict
-start
+disable
 visible
 event_enable
 '''
@@ -445,10 +445,10 @@ event_enable
 
 
 class Radio_Member(Control):
-	def __init__(self,window,key,rect,text=None,font=DEFAULT_FONT_PATH,text_color=(0,0,0),bg_color=None,up=None,down=None,status=False,event_enable=True,visible=True,start=True):
+	def __init__(self,window,key,rect,text=None,font=DEFAULT_FONT_PATH,text_color=(0,0,0),bg_color=None,up=None,down=None,status=False,event_enable=True,visible=True,disable=False):
 		self.key=key
 		
-		super().__init__(window,event_enable,visible,start)
+		super().__init__(window,event_enable,visible,disable)
 		
 
 		self.rect=pygame.rect.Rect(rect)
@@ -485,7 +485,7 @@ class Radio_Member(Control):
 		self.status=status
 
 	def blit(self):
-		if self.start and self.visible:
+		if (not self.disable) and self.visible:
 			self.window.blit(self.image[self.status],self.rect)
 			text_image=self.font.render(self.text,True,self.text_color,self.bg_color)
 			self.window.blit(text_image,(self.rect.right+10,self.rect.y))
@@ -497,7 +497,7 @@ class Radio_Member(Control):
 
 
 class Radio():
-	def __init__(self,window,group_id,choose_one=True,event_enable=True,visible=True,start=True):
+	def __init__(self,window,group_id,choose_one=True,event_enable=True,visible=True,disable=False):
 
 		self.window=window
 
@@ -511,7 +511,7 @@ class Radio():
 		
 		self.event_enable=event_enable
 
-		self.start=start
+		self.disable=disable
 		
 		self.visible=visible
 
@@ -529,7 +529,7 @@ class Radio():
 			:bg_color=None,
 			:up=None,
 			:down=None,
-			:start=True
+			:disable=False
 
 
 		'''
@@ -564,14 +564,14 @@ class Radio():
 		del self.layout[0]
 
 	def blit(self):
-		if self.start and self.visible:
+		if (not self.disable) and self.visible:
 			for values in self.member.values():
 				values.blit()
 
 	def check(self,event):
-		if self.start and event.type in [pygame.MOUSEBUTTONUP , pygame.MOUSEBUTTONDOWN , pygame.MOUSEMOTION] and self.event_enable:
+		if (not self.disable) and event.type in [pygame.MOUSEBUTTONUP , pygame.MOUSEBUTTONDOWN , pygame.MOUSEMOTION] and self.event_enable:
 			for values in self.member.values():
-				if values.all_rect.collidepoint(event.pos) and values.start and values.event_enable:
+				if values.all_rect.collidepoint(event.pos) and (not values.disable) and values.event_enable:
 					values.focus=True
 					if event.type==pygame.MOUSEBUTTONUP:
 						if self.choose_one:
@@ -614,7 +614,7 @@ class Radio():
 		del self.member_status[key]
 		
 class Text(Control):
-	def __init__(self,window,text,site,font=DEFAULT_FONT_PATH,font_size=30,text_color=(0,0,0),bg_color=None,has_box=False,has_mouse_inside_box=False,box_color=None,common=None,move=None,start=True):
+	def __init__(self,window,text,site,font=DEFAULT_FONT_PATH,font_size=30,text_color=(0,0,0),bg_color=None,has_box=False,has_mouse_inside_box=False,box_color=None,common=None,move=None,disable=False):
 		super().__init__(window)
 		self.window=window
 
@@ -638,7 +638,7 @@ class Text(Control):
 			box_color=self.text_color
 		self.box_color = box_color
 
-		self.start=start
+		self.disable=disable
 
 		self.mouse_inside=False
 
@@ -650,7 +650,7 @@ class Text(Control):
 		
 		
 	def blit(self):
-		if self.start:
+		if (not self.disable):
 			#text=self.font.render(self.text,True,self.text_color,self.bg_color)
 			self.window.blit(self.text_image,self.rect)
 			
@@ -658,7 +658,7 @@ class Text(Control):
 				pygame.draw.rect(self.window,self.box_color,self.rect,width=1)
 
 	def check(self , event):
-		if self.start and self.event_enable:
+		if (not self.disable) and self.event_enable:
 			
 			if event.type==pygame.MOUSEMOTION and self.rect.collidepoint(event.pos):
 				self.mouse_inside = True
@@ -677,9 +677,9 @@ class Text(Control):
 		
 class TimingBar(Control):
 	''' 计时条 '''
-	def __init__(self,window,rect,totime,barcolor=(0,0,0),has_box_sign=True,boxcolor=(200,200,200),boxwidth=0,backflow=True,visible=True,start=True):
+	def __init__(self,window,rect,totime,barcolor=(0,0,0),has_box_sign=True,boxcolor=(200,200,200),boxwidth=0,backflow=True,visible=True,disable=False):
 		
-		super().__init__(window=window,start=start,visible=visible)
+		super().__init__(window=window,disable=disable,visible=visible)
 		
 		self.rect=pygame.rect.Rect(rect)
 		
@@ -790,13 +790,13 @@ class TimingBar(Control):
 class CTimingBar(Control):
 #	num=0
 	
-	def __init__(self,window,rect,totime,barcolor=(0,0,0),has_box_sign=True,boxcolor=(200,200,200),boxwidth=0,backflow=True,visible=True,start=True):
+	def __init__(self,window,rect,totime,barcolor=(0,0,0),has_box_sign=True,boxcolor=(200,200,200),boxwidth=0,backflow=True,visible=True,disable=False):
  #	   super().__init__(window)
 		self.clock=pygame.time.Clock()
 #		self.totime=3*10**3
 		self.nowtime=0
 		
-		super().__init__(window=window,start=start,visible=visible)
+		super().__init__(window=window,disable=disable,visible=visible)
 		
 		self.rect=pygame.rect.Rect(rect)
 		
@@ -991,8 +991,8 @@ class Timing():
 
 class ScrollBar(Control):
 	''' 滚动条 '''
-	def __init__(self,window,rect,extend,precision=1,stick_color=(0,0,0),bg_stick_color=(200,200,200),button_color=(255,255,255),bg_button_color=(100,100,100),event_able=True,start=True):
-		super().__init__(window,event_enable=event_able,start=start)
+	def __init__(self,window,rect,extend,precision=1,stick_color=(0,0,0),bg_stick_color=(200,200,200),button_color=(255,255,255),bg_button_color=(100,100,100),event_able=True,disable=False):
+		super().__init__(window,event_enable=event_able,disable=disable)
 		
 		#整个滚动条的rect
 		self.rect=pygame.rect.Rect(rect)
@@ -1117,7 +1117,7 @@ class ScrollBar(Control):
 		for name,value in kargs.items():
 			if name in \
 			[
-				'start',
+				'disable',
 				'event_able',
 				'extend',
 				'precision',
@@ -1140,7 +1140,7 @@ class ScrollBar(Control):
 	
 		
 	def blit(self):
-		if self.start:
+		if (not self.disable):
 			#绘制上按钮背景
 			pygame.draw.rect(self.window,self.bg_button_color,self.up_button_rect)
 			#位置下按钮背景
@@ -1163,7 +1163,7 @@ class ScrollBar(Control):
 				
 				
 	def check(self,event):
-		if self.event_enable and self.start:
+		if self.event_enable and (not self.disable):
 				
 			#鼠标按键点击事件
 			if event.type==pygame.MOUSEBUTTONDOWN:
@@ -1271,8 +1271,8 @@ class Animations(Control):
 		
 		
 class Dice(Control):
-	def __init__(self,window,rect,box_width=2,box_color=(0,0,0),time_break=1,pic_path=None,start=True):
-		super().__init__(window,start=start)
+	def __init__(self,window,rect,box_width=2,box_color=(0,0,0),time_break=1,pic_path=None,disable=False):
+		super().__init__(window,disable=disable)
 		
 		self.rect=pygame.rect.Rect(rect)
 		
@@ -1344,7 +1344,7 @@ class Dice(Control):
 		
 		
 class Dice_Group(Group):
-	def __init__(self,window,rect,layout,box_width=2,box_color=(0,0,0),time_break=1,start=True):
+	def __init__(self,window,rect,layout,box_width=2,box_color=(0,0,0),time_break=1,disable=False):
 		super().__init__(window)
 		#self.window=window
 			
@@ -1357,7 +1357,7 @@ class Dice_Group(Group):
 		for num,L in enumerate(layout):
 			for H in range(L):
 				#self.member
-				self.add(Dice(self.window,(self.rect.x+num*self.rect.width,self.rect.y+H*self.rect.height,*self.rect.size),box_width,box_color,time_break,start=start),(num,H))
+				self.add(Dice(self.window,(self.rect.x+num*self.rect.width,self.rect.y+H*self.rect.height,*self.rect.size),box_width,box_color,time_break,disable=disable),(num,H))
 			
 		#	
 #	def blit(self):
@@ -1398,8 +1398,8 @@ class Dice_Group(Group):
 		return self.member[index]
 
 class OutputBox(Control):
-	def __init__(self,window,event_enable=True,visible=True,start=True):
-		super().__init__(window,event_enable=event_enable,visible=visible,start=start)
+	def __init__(self,window,event_enable=True,visible=True,disable=False):
+		super().__init__(window,event_enable=event_enable,visible=visible,disable=disable)
 
 		self.rect=pygame.rect.Rect((200,600,300,300))
 
@@ -1489,9 +1489,9 @@ class OutputBox(Control):
 
 
 class InputBox(Control):
-	def __init__(self,window,rect,text='', font=None,font_color=(0,0,0),font_size=None,bg_font_color=None,focus=False,cursor_index=0,box_line_color=(0,0,0),box_line_width=1,bg_color=(255,255,255),x_pad=2,y_pad=2,cursor_width=1,flash_sign=0,flash_sign_max=100,event_enable=True,visible=True,start=True,enter_callback=None):
+	def __init__(self,window,rect,text='', font=None,font_color=(0,0,0),font_size=None,bg_font_color=None,focus=False,cursor_index=0,box_line_color=(0,0,0),box_line_width=1,bg_color=(255,255,255),x_pad=2,y_pad=2,cursor_width=1,flash_sign=0,flash_sign_max=100,event_enable=True,visible=True,disable=False,enter_callback=None):
 		self.window = window
-		super().__init__(window,event_enable=event_enable,visible=visible,start=start)
+		super().__init__(window,event_enable=event_enable,visible=visible,disable=disable)
 
 		self.window_rect=window.get_rect()
 		
@@ -1702,7 +1702,7 @@ class InputBox(Control):
 		
 
 	def check(self,event):
-		if self.start and self.event_enable:
+		if (not self.disable) and self.event_enable:
 			if event.type==pygame.MOUSEBUTTONDOWN:
 				self.deal_mouse_event(event)
 
