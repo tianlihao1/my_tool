@@ -1,3 +1,4 @@
+from faulthandler import disable
 import pygame
 from my_tool import Control
 import os
@@ -22,12 +23,12 @@ class Button(Control):
 		bg_color:	   按钮当前颜色
 		text_color:	   按钮字体的颜色
 		font_size：	 按钮字体的大小，默认为None
-		start:			 按钮的启用状态
+		disable:			 按钮的启用状态
 		mouse_down：		按钮被鼠标是否按下
 	'''
-	def __init__(self,window,rect,text='按钮',font=DEFAULT_FONT_PATH,has_bg=True,bg_color=(0,0,0),  image=None,is_image_scale=True, text_color=(255,255,255), font_size=None,cover_surface_color=(255,255,255),cover_surface_alpha=100, association_key_event=None,common=None,move=None,callback_function=None,event_enable=True,visible=True,start=True):
+	def __init__(self,window,rect,text='按钮',font=DEFAULT_FONT_PATH,has_bg=True,bg_color=(0,0,0),  image=None,is_image_scale=True, text_color=(255,255,255), font_size=None,cover_surface_color=(255,255,255),cover_surface_alpha=100, association_key_event=None,common=None,move=None,callback_function=None,event_enable=True,visible=True,disable=False):
 		
-		super().__init__(window,event_enable,visible,start)
+		super().__init__(window,event_enable,visible,disable=disable)
 
 		#按钮矩形空间
 		self.rect=pygame.Rect(rect)
@@ -113,7 +114,7 @@ class Button(Control):
 		self.callback_function=callback_function
 
 		#是否启用
-		self.start=start
+		self.disable=disable
 		self.layout_init(common,move)
 
 		#self.update_image()
@@ -144,7 +145,7 @@ class Button(Control):
 
 	def blit(self):
 		#判断是否启用
-		if self.start and self.visible:
+		if (not self.disable) and self.visible:
 #这里要改
 			
 			#blit bg
@@ -167,19 +168,19 @@ class Button(Control):
 		self.pressdown_sign=False
 
 		#判断按钮是否禁用
-		if self.start and self.event_enable:
+		if (not self.disable) and self.event_enable:
 			#检测键盘事件
 			if self.key_press_dict:
 				key_pressed=pygame.key.get_pressed()
-				for k in self.key_press_dict.keys():
-					if key_pressed[k] and not self.key_press_dict[k]:
+				for k,v in self.key_press_dict.items():
+					if key_pressed[k] and not v:
 						self.key_press_dict[k]=True
 						self.pressdown_sign=True
 						return self.pressdown_sign
-					elif not key_pressed[k] and self.key_press_dict[k]:
+					elif not key_pressed[k] and v:
 						self.key_press_dict[k]=False
 						self.pressup_sign=True
-						self.callback_function()
+						if self.callback_function:self.callback_function()
 						return self.pressup_sign
 
 			#检测鼠标状态
@@ -329,7 +330,7 @@ class Button(Control):
 	def update(self,*args,**kargs):
 		'''本方法只能能改
 key_press_dict
-start
+disable
 visible
 event_enable
 '''
