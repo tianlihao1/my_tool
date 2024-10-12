@@ -1068,9 +1068,13 @@ class ScrollBar(Control):
 	
 	def get_exact_value(self):
 		''' 将滚动条的y转化成对应的value '''
-		value= (self.stick_rect.y-self.bg_stick_rect.top)/(self.bg_stick_rect.height-self.stick_rect.height)*(self.extend[1]-self.extend[0]+1)+self.extend[0]
-		if value > self.extend[1]:
-			value=self.extend[1]
+		if self.extend[0]==self.extend[1]:
+			value=self.extend[0]
+			
+		else:
+			value= (self.stick_rect.y-self.bg_stick_rect.top)/(self.bg_stick_rect.height-self.stick_rect.height)*(self.extend[1]-self.extend[0]+1)+self.extend[0]
+			if value > self.extend[1]:
+				value=self.extend[1]
 		
 		return value
 		
@@ -1344,6 +1348,7 @@ class Dice(Control):
 		
 		
 class Dice_Group(Group):
+	'''layout功能未完善'''
 	def __init__(self,window,rect,layout,box_width=2,box_color=(0,0,0),time_break=1,disable=False):
 		super().__init__(window)
 		#self.window=window
@@ -1401,27 +1406,30 @@ class OutputBox(Control):
 	def __init__(self,window,event_enable=True,visible=True,disable=False):
 		super().__init__(window,event_enable=event_enable,visible=visible,disable=disable)
 
-		self.rect=pygame.rect.Rect((200,600,300,300))
+		self.rect=pygame.rect.Rect((0,0,100,800))
 
 		self.scrollbar_width=30
 
 		#self.ouput_rect=pygame.rect.Rect((*self.rect.topright,self.rect.width-self.scrollbar_width,self.rect.height))
 
 		self.font_size=20
+		
 		self.text_color=(0,0,0)
 		self.text_bgcolor=None
 		
 		self.box_line_color=(0,0,0)
 
 		self.font=pygame.font.Font(DEFAULT_FONT_PATH,self.font_size)
-
+		self.page_contain_line_num=self.rect.height//self.font.get_height()
 		self.output_rect=pygame.rect.Rect((*self.rect.topleft,self.rect.width-self.scrollbar_width,self.rect.height))
 		
 		self.scrollbar_rect=pygame.rect.Rect((*self.output_rect.topright,self.scrollbar_width,self.rect.height))
 
 		self.text=self.split('shusmsjkkidjsjfhhfddffddfhf的摄影师杜一第对齐')
-		
-		self.scrollbar=ScrollBar(window,self.scrollbar_rect,(0,len(self.text)))
+		scroll_extend_max=len(self.text)-self.page_contain_line_num
+		if scroll_extend_max<0:
+			scroll_extend_max=0
+		self.scrollbar=ScrollBar(window,self.scrollbar_rect,(0,scroll_extend_max))
 
 		self.output_surface=pygame.surface.Surface(self.output_rect.size)
 		self.output_surface.fill((0,255,0))
@@ -1450,10 +1458,10 @@ class OutputBox(Control):
 	
 	
 	def update_rect(self):
-		self.output_rect=pygame.rect.Rect((*self.rect.topleft,self.rect.width-self.scrollbar_width,self.rect.height))
+		self.output_rect=pygame.rect.Rect((*self.rect.topright,self.rect.width-self.scrollbar_width))
 
-		self.scrollbar_rect=pygame.rect.Rect((*self.output_rect.topright,self.scrollbar_width,self.rect.height))
-		
+		self.scrollbar_rect=pygame.rect.Rect((*self.output_rect.topleft,self.scrollbar_width,self.rect.height))
+
 		self.scrollbar.update(rect=self.scrollbar_rect)
 		
 	
@@ -1475,7 +1483,7 @@ class OutputBox(Control):
 				break
 		self.window.blit(self.output_surface,self.output_rect)
 		pygame.draw.rect(self.window,self.box_line_color,self.rect,1)
-		#self.scrollbar.blit()
+		self.scrollbar.blit()
 			  
 	
 	def check(self,event):
