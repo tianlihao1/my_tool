@@ -74,15 +74,4 @@ class Container():
 		for i in self.member.values():
 			i.update(*args,**kargs)
 
-	def run(self):
-		while True:
-			for event in pygame.event.get():
-				if event.type==pygame.QUIT:
-					exit()
-				else:
 
-					self.check(event)
-
-			#self.update()
-			self.blit()
-			pygame.display.update()

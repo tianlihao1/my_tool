@@ -40,4 +40,15 @@ class Page(Container):
 	def start_page(self,page_name):
 		pass
 		
+	def run(self):
+		while True:
+			for event in pygame.event.get():
+				if event.type==pygame.QUIT:
+					exit()
+				else:
 
+					self.check(event)
+
+			#if pygame.key.get_pressed()[pygame.K_1]: print(10)
+			self.blit()
+			pygame.display.update()
