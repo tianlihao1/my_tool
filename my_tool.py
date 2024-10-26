@@ -1,3 +1,4 @@
+from pkgutil import extend_path
 import time
 import pygame
 import os
@@ -991,7 +992,7 @@ class Timing():
 
 class ScrollBar(Control):
 	''' 滚动条 '''
-	def __init__(self,window,rect,extend,precision=1,stick_color=(0,0,0),bg_stick_color=(200,200,200),button_color=(255,255,255),bg_button_color=(100,100,100),event_able=True,disable=False):
+	def __init__(self,window,rect,extend,precision=1,stick_height=None,stick_color=(0,0,0),bg_stick_color=(200,200,200),button_color=(255,255,255),bg_button_color=(100,100,100),event_able=True,disable=False):
 		super().__init__(window,event_enable=event_able,disable=disable)
 		
 		#整个滚动条的rect
@@ -1005,7 +1006,9 @@ class ScrollBar(Control):
 		
 		self.value=self.extend[0]
 		
-		
+		#滚动条的高是否自适应变化
+		self.stick_height=stick_height
+
 		#更新对应的布局rect
 		self.update_layout_rect()
 		
@@ -1058,11 +1061,14 @@ class ScrollBar(Control):
 
 	def value_turn_y(self):
 		''' 获得value对应的滚动条的y值 '''
-		return (self.value-self.extend[0])*(self.bg_stick_rect.height-self.get_stick_height())/(self.extend[1]-self.extend[0]+1)+self.bg_stick_rect.top
+		return (self.value-self.extend[0])*(self.bg_stick_rect.height-self.get_stick_height())/(self.extend[1]-self.extend[0])+self.bg_stick_rect.top
 		
 	
 	def get_stick_height(self):
 		''' 获得滚动条的高 '''
+		if self.stick_height:
+			return self.stick_height
+
 		return int(self.bg_stick_rect.height/(self.extend[1]-self.extend[0]+1))
 	
 	
@@ -1403,10 +1409,10 @@ class Dice_Group(Group):
 		return self.member[index]
 
 class OutputBox(Control):
-	def __init__(self,window,event_enable=True,visible=True,disable=False):
+	def __init__(self,window,adaptive_ScrollBar_height=True ,event_enable=True,visible=True,disable=False):
 		super().__init__(window,event_enable=event_enable,visible=visible,disable=disable)
 
-		self.rect=pygame.rect.Rect((0,0,100,800))
+		self.rect=pygame.rect.Rect((0,0,100,200))
 
 		self.scrollbar_width=30
 
@@ -1426,6 +1432,7 @@ class OutputBox(Control):
 		self.scrollbar_rect=pygame.rect.Rect((*self.output_rect.topright,self.scrollbar_width,self.rect.height))
 
 		self.text=self.split('shusmsjkkidjsjfhhfddffddfhf的摄影师杜一第对齐')
+
 		scroll_extend_max=len(self.text)-self.page_contain_line_num
 		if scroll_extend_max<0:
 			scroll_extend_max=0
@@ -1456,7 +1463,12 @@ class OutputBox(Control):
 			line_width=0
 		return line_list
 	
-	
+	def update_extend(self):
+		scroll_extend_max=len(self.text)-self.page_contain_line_num
+		if scroll_extend_max<0:
+			scroll_extend_max=0
+		self.scrollbar.update(extend=(0,scroll_extend_max))
+
 	def update_rect(self):
 		self.output_rect=pygame.rect.Rect((*self.rect.topright,self.rect.width-self.scrollbar_width))
 
@@ -1470,7 +1482,7 @@ class OutputBox(Control):
 			text=self.text[-1]+text
 		text=self.split(text)
 		self.text[-1:]=text
-		self.scrollbar.update(extend=(0,len(self.text)))
+		self.update_extend()
 		
 		
 	def blit(self):
