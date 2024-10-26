@@ -3,7 +3,7 @@ from Container import *
 import pygame
 
 class Page(Container):
-	def __init__(self,window,has_bg=True,bgcolor=(255,255,255), bg_image=None, is_image_scale=True,name=None,father=None):
+	def __init__(self,window,has_bg=True,bgcolor=(255,255,255), bg_image=None, is_image_scale=True,name=None,father=None,every_frame_function=None):
 		super().__init__()
 		self.window=window
 		self.window_rect=self.window.get_rect()
@@ -25,6 +25,7 @@ class Page(Container):
 			self.bg_surface.blit(self.bg_image,(0,0))
 		else:
 			self.bg_surface.fill(self.bgcolor)
+		self.every_frame_function=every_frame_function
 
 	def blit(self):
 		if self.has_bg_sign:
@@ -48,7 +49,7 @@ class Page(Container):
 				else:
 
 					self.check(event)
-
+			if self.every_frame_function:self.every_frame_function(self)
 			#if pygame.key.get_pressed()[pygame.K_1]: print(10)
 			self.blit()
 			pygame.display.update()
