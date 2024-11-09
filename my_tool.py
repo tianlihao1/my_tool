@@ -992,21 +992,21 @@ class Timing():
 
 class ScrollBar(Control):
 	''' 滚动条 '''
-	def __init__(self,window,rect,extend,precision=1,stick_height=None,stick_color=(0,0,0),bg_stick_color=(200,200,200),button_color=(255,255,255),bg_button_color=(100,100,100),event_able=True,disable=False):
+	def __init__(self,window,rect,extent,precision=1,stick_height=None,stick_color=(0,0,0),bg_stick_color=(200,200,200),button_color=(255,255,255),bg_button_color=(100,100,100),event_able=True,disable=False):
 		super().__init__(window,event_enable=event_able,disable=disable)
 		
 		#整个滚动条的rect
 		self.rect=pygame.rect.Rect(rect)
 		
 		#value的范围
-		self.extend=extend
+		self.extent=extent
 		
 		#value的精度
 		self.precision=precision
 		
-		self.value=self.extend[0]
+		self.value=self.extent[0]
 		
-		#滚动条的高是否自适应变化
+		#滚动条的高
 		self.stick_height=stick_height
 
 		#更新对应的布局rect
@@ -1061,7 +1061,7 @@ class ScrollBar(Control):
 
 	def value_turn_y(self):
 		''' 获得value对应的滚动条的y值 '''
-		return (self.value-self.extend[0])*(self.bg_stick_rect.height-self.get_stick_height())/(self.extend[1]-self.extend[0])+self.bg_stick_rect.top
+		return (self.value-self.extent[0])*(self.bg_stick_rect.height-self.get_stick_height())/(self.extent[1]-self.extent[0])+self.bg_stick_rect.top
 		
 	
 	def get_stick_height(self):
@@ -1069,18 +1069,18 @@ class ScrollBar(Control):
 		if self.stick_height:
 			return self.stick_height
 
-		return int(self.bg_stick_rect.height/(self.extend[1]-self.extend[0]+1))
+		return int(self.bg_stick_rect.height/(self.extent[1]-self.extent[0]+1))
 	
 	
 	def get_exact_value(self):
 		''' 将滚动条的y转化成对应的value '''
-		if self.extend[0]==self.extend[1]:
-			value=self.extend[0]
+		if self.extent[0]==self.extent[1]:
+			value=self.extent[0]
 			
 		else:
-			value= (self.stick_rect.y-self.bg_stick_rect.top)/(self.bg_stick_rect.height-self.stick_rect.height)*(self.extend[1]-self.extend[0]+1)+self.extend[0]
-			if value > self.extend[1]:
-				value=self.extend[1]
+			value= (self.stick_rect.y-self.bg_stick_rect.top)/(self.bg_stick_rect.height-self.stick_rect.height)*(self.extent[1]-self.extent[0])+self.extent[0]
+			if value > self.extent[1]:
+				value=self.extent[1]
 		
 		return value
 		
@@ -1090,13 +1090,17 @@ class ScrollBar(Control):
 	
 	def set_value(self,value):
 		''' 设置value '''
-		
+		# breakpoint()
+		# pass
 		#使value在范围内并赋值给self.value
-		self.value=min(self.extend[1],max(self.extend[0],value))
+		self.value=round(min(self.extent[1],max(self.extent[0],value)),self.precision)
 
 		self.stick_rect.y=self.value_turn_y()
 
-		
+	def set_extent(self,extent):
+		self.extent=extent
+		self.value=min(self.extent[1],max(self.extent[0],self.value))
+		self.update_layout_rect()
 		
 	def up(self):
 		''' value向上一个精度,即value减一个精度 '''
@@ -1111,7 +1115,7 @@ class ScrollBar(Control):
 		
 	def get_percentage(self):
 		''' 获得value占整个范围的百分比 '''
-		return (self.value-self.extend[0])/(self.extend[1]-self.extend[0])
+		return (self.value-self.extent[0])/(self.extent[1]-self.extent[0])
 	
 
 	def move(self,x=0,y=0):
@@ -1129,7 +1133,7 @@ class ScrollBar(Control):
 			[
 				'disable',
 				'event_able',
-				'extend',
+				'extent',
 				'precision',
 				'bg_stick_color',
 				'button_color',
@@ -1141,10 +1145,10 @@ class ScrollBar(Control):
 				setattr(self,name,value)
 				
 
-				if name=='extend':
-					self.value=min(self.extend[1],max(self.extend[0],self.value))
+				if name=='extent':
+					self.value=min(self.extent[1],max(self.extent[0],self.value))
 				if name in \
-				 ['window','rect','extend']:
+				 ['window','rect','extent']:
 					self.update_layout_rect()
 			
 	
@@ -1433,10 +1437,10 @@ class OutputBox(Control):
 
 		self.text=self.split('shusmsjkkidjsjfhhfddffddfhf的摄影师杜一第对齐')
 
-		scroll_extend_max=len(self.text)-self.page_contain_line_num
-		if scroll_extend_max<0:
-			scroll_extend_max=0
-		self.scrollbar=ScrollBar(window,self.scrollbar_rect,(0,scroll_extend_max))
+		scroll_extent_max=len(self.text)-self.page_contain_line_num
+		if scroll_extent_max<0:
+			scroll_extent_max=0
+		self.scrollbar=ScrollBar(window,self.scrollbar_rect,(0,scroll_extent_max))
 
 		self.output_surface=pygame.surface.Surface(self.output_rect.size)
 		self.output_surface.fill((0,255,0))
@@ -1463,11 +1467,11 @@ class OutputBox(Control):
 			line_width=0
 		return line_list
 	
-	def update_extend(self):
-		scroll_extend_max=len(self.text)-self.page_contain_line_num
-		if scroll_extend_max<0:
-			scroll_extend_max=0
-		self.scrollbar.update(extend=(0,scroll_extend_max))
+	def update_extent(self):
+		scroll_extent_max=len(self.text)-self.page_contain_line_num
+		if scroll_extent_max<0:
+			scroll_extent_max=0
+		self.scrollbar.update(extent=(0,scroll_extent_max))
 
 	def update_rect(self):
 		self.output_rect=pygame.rect.Rect((*self.rect.topright,self.rect.width-self.scrollbar_width))
@@ -1482,7 +1486,7 @@ class OutputBox(Control):
 			text=self.text[-1]+text
 		text=self.split(text)
 		self.text[-1:]=text
-		self.update_extend()
+		self.update_extent()
 		
 		
 	def blit(self):
