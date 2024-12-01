@@ -1105,7 +1105,7 @@ class ScrollBar(Control):
 		# breakpoint()
 		# pass
 		#使value在范围内并赋值给self.value
-		self.value=round(min(self.extent[1],max(self.extent[0],value)),self.precision)
+		self.value=round_by_precision(min(self.extent[1],max(self.extent[0],value)),self.precision)
 
 		self.stick_rect.y=self.value_turn_y()
 
