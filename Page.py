@@ -4,7 +4,7 @@ import pygame
 
 class Page(Container):
 	def __init__(self,window,has_bg=True,bgcolor=(255,255,255), bg_image=None, is_image_scale=True,name=None,father=None,every_frame_function=None):
-		super().__init__()
+		super().__init__(every_frame_function)
 		self.window=window
 		self.window_rect=self.window.get_rect()
 		#self.father=father
@@ -25,18 +25,15 @@ class Page(Container):
 			self.bg_surface.blit(self.bg_image,(0,0))
 		else:
 			self.bg_surface.fill(self.bgcolor)
-		self.bind(every_frame_function)
+	#	self.bind(every_frame_function)
 
 	def blit(self):
 		if self.has_bg_sign:
 			self.window.blit(self.bg_surface,(0,0))
 		super().blit()
 	
-	def bind(self,func=None):
-		self.every_frame_function=func
-
-	def update(self):
-		pass
+#	def update(self):
+#		pass
 
 	def stop_page(self,page_name):
 		pass
@@ -52,7 +49,7 @@ class Page(Container):
 				else:
 
 					self.check(event)
-			if self.every_frame_function:self.every_frame_function(self)
+			self.frame_update()
 			#if pygame.key.get_pressed()[pygame.K_1]: print(10)
 			self.blit()
 			pygame.display.update()

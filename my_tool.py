@@ -17,8 +17,16 @@ DEFAULT_FONT_PATH=os.path.join(DEFAULT_RES_PATH,'font','SourceHanSerifCN','Regul
 DEFAULT_PIC_PATH=os.path.join(DEFAULT_RES_PATH,'pic')
 
 #print(DEFAULT_FONT_PATH)
+#无用
+def get_precision_num(float_num):
+	num=1
+	while True:
+		if (10**num)*float_num==int((10**num)*float_num):
+			return num
+		else:
+			num+=1
 
-def round(value,precision):
+def round_by_precision(value,precision):
 	value=value/precision
 	int_value=int(value)
 	mid_values=int_value+0.5
@@ -26,6 +34,7 @@ def round(value,precision):
 		value=(int_value+1)*precision
 	else:
 		value=(int_value)*precision
+		
 	return value
 
 
@@ -108,6 +117,9 @@ class Control():
 		pass
 	
 	def blit(self):
+		pass
+	
+	def frame_update(self):
 		pass
 
 

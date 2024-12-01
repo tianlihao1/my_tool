@@ -55,16 +55,13 @@ class Pages(Container):
 		#object.name=name
 		self.change_page_event_dict[name]=[]
 
-	def update(self,*args,**kargs):
-		super().update(*args,**kargs)
-
-	def add_change_page_event(self,object,func,next_page):
+	def add_change_page_event(self,page,func,next_page):
 		#print(object.name,type(object.name))
 		
-		if self.change_page_event_dict.get(object.name,None) ==None:
-			self.change_page_event_dict[object.name]=[]
+		if self.change_page_event_dict.get(page.name,None) ==None:
+			self.change_page_event_dict[page.name]=[]
 		
-		self.change_page_event_dict[object.name].append((func,next_page))
+		self.change_page_event_dict[page.name].append((func,next_page))
 
 
 	def check(self,event):
@@ -82,9 +79,7 @@ class Pages(Container):
 				if event.type==pygame.QUIT:
 					exit()
 				else:
-
 					self.check(event)
-
-			self.update()
+			self.frame_update()
 			self.blit()
 			pygame.display.update()
