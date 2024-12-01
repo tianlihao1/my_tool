@@ -25,12 +25,15 @@ class Page(Container):
 			self.bg_surface.blit(self.bg_image,(0,0))
 		else:
 			self.bg_surface.fill(self.bgcolor)
-		self.every_frame_function=every_frame_function
+		self.bind(every_frame_function)
 
 	def blit(self):
 		if self.has_bg_sign:
 			self.window.blit(self.bg_surface,(0,0))
 		super().blit()
+	
+	def bind(self,func=None):
+		self.every_frame_function=func
 
 	def update(self):
 		pass
