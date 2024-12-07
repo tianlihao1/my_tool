@@ -2,8 +2,8 @@ from Container import *
 import pygame
 
 class Group(Container):
-	def __init__(self,window,name=None,father=None,visible=True,start=True,move=None,common=None):
-		super().__init__()
+	def __init__(self,window,name=None,father=None,visible=True,start=True,move=None,common=None,every_frame_function=None):
+		super().__init__(every_frame_function)
 		self.window=window
 		self.window_rect=self.window.get_rect()
 		#self.father=father
@@ -26,20 +26,16 @@ class Group(Container):
 	def check(self,event=None):
 		if self.start:
 			super().check(event)
-	
-	
-	def update(self):
-		pass
 
-	def stop_group(self):
-		for i in self.member.keys():
+	def stop_all(self):
+		for i in self.keys():
 			try:
 				i.stop()
 			except AttributeError:
 				pass
 
-	def start_group(self):
-		for i in self.member.keys():
+	def start_all(self):
+		for i in self.keys():
 			try:
 				i.do()
 			except AttributeError:
@@ -56,7 +52,7 @@ class Group(Container):
 		
 	def move(self,x=0,y=0):
 		if x or y:
-			for i in self.member.values():
+			for i in self.values():
 				try:
 					i.move(x,y)
 				except AttributeError:

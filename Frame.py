@@ -3,8 +3,8 @@ import pygame
 from Group import Group
 
 class Frame(Group):
-	def __init__(self,window,has_bg=True,bgcolor=(255,255,255), bg_image=None, is_image_scale=True,name=None,father=None,visible=True,start=True,move=None,common=None):
-		super().__init__(window=window,name=name,father=father,visible=visible,start=start,move=move,common=common)
+	def __init__(self,window,has_bg=True,bgcolor=(255,255,255), bg_image=None, is_image_scale=True,name=None,father=None,visible=True,start=True,move=None,common=None,every_frame_function=None):
+		super().__init__(window=window,name=name,father=father,visible=visible,start=start,move=move,common=common,every_frame_function=every_frame_function)
 		#self.window=window
 		#self.window_rect=self.window.get_rect()
 		
@@ -36,27 +36,6 @@ class Frame(Group):
 				self.window.blit(self.bg_surface,(0,0))
 			super().blit()
 			
-#	def check(self,event=None):
-#		if self.start:
-#			super().check(event)
-	
-	
-#	def update(self):
-#		pass
-
-	def stop_frame(self):
-		for i in self.member.keys():
-			try:
-				i.stop()
-			except AttributeError:
-				pass
-
-	def start_frame(self):
-		for i in self.member.keys():
-			try:
-				i.do()
-			except AttributeError:
-				pass
 
 #	def add(self,object,name=None,auto_give_name=True):
 #		ob_rect=getattr(object,'rect',None)

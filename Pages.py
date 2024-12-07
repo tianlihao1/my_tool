@@ -25,10 +25,10 @@ class Pages(Container):
 			self.next_to(self.member_name_sort[self.now_page_index], remain_previous_bg)
 
 
-	def next_to(self,id,remain_previous_bg=False):
+	def next_to(self,name,remain_previous_bg=False):
 #这里需要修改
 		#print(self.member)
-		self.now_page.stop_page(self.member[id])
+		self.now_page.stop_page(self.members[name])
 		#self.remain_previous_bg=remain_previous_bg
 		if (not self.remain_previous_bg_sign) and remain_previous_bg:
 			self.previous_bg= pygame.surface.Surface(self.window.get_size())
@@ -37,7 +37,7 @@ class Pages(Container):
 			self.remain_previous_bg_sign=False
 		self.now_page_index=self.member_name_sort.index(id)
 		previous_page_name=self.now_page.name
-		self.now_page=self.member[id]
+		self.now_page=self.members[name]
 		self.now_page.start_page(previous_page_name)
 
 	def blit(self):
@@ -45,11 +45,11 @@ class Pages(Container):
 			self.window.blit(self.previous_bg,(0,0))
 		self.now_page.blit()
 
-	def add(self,object,name=None,auto_give_name=True):
+	def add(self,member,name=None,auto_give_name=True):
 		if not self.now_page:
-			self.now_page=object
+			self.now_page=member
 		#object.father=self
-		name=super().add(object,name,auto_give_name)
+		name=super().add(member,name,auto_give_name)
 		#print(name)
 		#1/0
 		#object.name=name
