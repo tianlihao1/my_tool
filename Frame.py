@@ -3,25 +3,32 @@ import pygame
 from Group import Group
 
 class Frame(Group):
-	def __init__(self,window,has_bg=True,bgcolor=(255,255,255), bg_image=None, is_image_scale=True,name=None,father=None,visible=True,start=True,move=None,common=None,every_frame_function=None):
+	def __init__(self,window,rect,bgcolor=(255,255,255), bg_image=None, is_image_scale=True,name=None,father=None,visible=True,start=True,move=None,common=None,every_frame_function=None):
 		super().__init__(window=window,name=name,father=father,visible=visible,start=start,move=move,common=common,every_frame_function=every_frame_function)
 		#self.window=window
 		#self.window_rect=self.window.get_rect()
 		
-#		if father:
-#			if name:
-#				father.add(self,name)
-#			else:
-#				father.add(self)
-#		self.rect=None
-		self.has_bg_sign=has_bg
+		if father:
+			if name:
+				father.add(self,name)
+			else:
+				father.add(self)
+		self.rect=pygame.rect.Rect(rect)
+		#self.has_bg_sign=has_bg
 		self.bgcolor=bgcolor
-		self.bg_surface=pygame.surface.Surface(self.window_rect.size)
+		self.bg_surface=pygame.surface.Surface(self.rect.size)
+		self.frame_surface=pygame.surface.Surface(self.rect.size)
+		
+		
 		if bg_image:
-			self.bg_image=pygame.image.load(bg_image).convert()
+			bg_image=pygame.image.load(bg_image).convert()
 			if is_image_scale:
-				self.bg_image=pygame.transform.scale(self.bg_image, self.window_rect.size)
-			self.bg_surface.blit(self.bg_image,(0,0))
+				bg_image=pygame.transform.scale(bg_image, self.rect.size)
+			else:
+				self.rect.size=bg_image.get_size()
+				self.bg_surface=pygame.surface.Surface(self.rect.size)
+				self.frame_surface=pygame.surface.Surface(self.rect.size)
+			self.bg_surface.blit(bg_image,(0,0))
 		else:
 			self.bg_surface.fill(self.bgcolor)
 		#self.visible=visible
@@ -30,14 +37,19 @@ class Frame(Group):
 
 	def blit(self):
 		if self.visible:
-			#print(self.member)
-			#1/0
-			if self.has_bg_sign:
-				self.window.blit(self.bg_surface,(0,0))
-			super().blit()
-			
+			for member in self.values():
+				member.blit()
+				
+#			if self.has_bg_sign:
+#				self.window.blit(self.bg_surface,(0,0))
 
-#	def add(self,object,name=None,auto_give_name=True):
+			self.window.blit(self.frame_surface,self.rect)
+			
+	
+
+	def add(self,member,name=None,auto_give_name=True):
+		member.window=self.frame_surface
+		member.window_rect=self.rect
 #		ob_rect=getattr(object,'rect',None)
 #		if not ob_rect is None:
 #			try:

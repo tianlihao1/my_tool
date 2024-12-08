@@ -41,14 +41,15 @@ class Group(Container):
 			except AttributeError:
 				pass
 
-	def add(self,object,name=None,auto_give_name=True):
-		ob_rect=getattr(object,'rect',None)
+	def add(self,member,name=None,auto_give_name=True):
+		ob_rect=getattr(member,'rect',None)
 		if not ob_rect is None:
 			try:
 				self.rect.union_ip(ob_rect)
 			except AttributeError:
+				#可能存在指向同一变量
 				self.rect=ob_rect.copy()
-		super().add(object,name,auto_give_name)
+		super().add(member,name,auto_give_name)
 		
 	def move(self,x=0,y=0):
 		if x or y:

@@ -12,8 +12,12 @@ class Container():
 	def keys(self):
 		return self.member_name_sort
 	
+	def items(self):
+		return (((name,self.members[name]) for name in self.keys()))
+		
 	def values(self):
-		return self.members.values()
+		return (self.members[name] for name in self.keys() )
+	
 	
 	def __getitem__(self,key):
 		return self.members[key]
