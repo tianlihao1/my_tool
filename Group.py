@@ -1,11 +1,8 @@
-from Container import *
-import pygame
+from ContainerControl import ContainerControl
 
-class Group(Container):
-	def __init__(self,window,name=None,father=None,visible=True,start=True,move=None,common=None,every_frame_function=None):
-		super().__init__(every_frame_function)
-		self.window=window
-		self.window_rect=self.window.get_rect()
+class Group(ContainerControl):
+	def __init__(self,window,name=None,father=None,event_enable=True,visible=True,disable=True,move=None,common=None,every_frame_function=None):
+		super().__init__(every_frame_function=every_frame_function,window=window,event_enable=event_enable,visible=visible,disable=disable)
 		#self.father=father
 		if father:
 			if name:
@@ -13,18 +10,16 @@ class Group(Container):
 			else:
 				father.add(self)
 		self.rect=None
-		self.visible=visible
-		self.start=start
 		self.layout_init(move,common)
 
 	def blit(self):
-		if self.visible:
+		if self.visible and self.disable:
 			#print(self.member)
 			#1/0
 			super().blit()
 			
 	def check(self,event=None):
-		if self.start:
+		if self.event_enable and self.disable:
 			super().check(event)
 
 	def stop_all(self):
@@ -88,22 +83,4 @@ class Group(Container):
 		
 		self.update_rect()
 		
-
-	def update_rect(self):
-		pass
-
-
-	def layout_init(self,common=None,move=None):
-		if not common is None:
-			self.set_common(*common)
-		if not move is None:
-			self.move(*move)
-
-	
-	def change_status(self,status=None):
-		'''这是改变开启状态的方法'''
-		if status==None:
-			self.start=not self.start
-		else:
-			self.start=status
 			
