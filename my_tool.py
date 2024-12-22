@@ -1,10 +1,9 @@
-from pkgutil import extend_path
 import time
 import pygame
 import os
 import random
 import math
-from Frame import Frame
+#from Frame import Frame
 from Group import Group
 
 pygame.init()
@@ -17,14 +16,16 @@ DEFAULT_FONT_PATH=os.path.join(DEFAULT_RES_PATH,'font','SourceHanSerifCN','Regul
 DEFAULT_PIC_PATH=os.path.join(DEFAULT_RES_PATH,'pic')
 
 #print(DEFAULT_FONT_PATH)
-#无用
-def get_precision_num(float_num):
-	num=1
-	while True:
-		if (10**num)*float_num==int((10**num)*float_num):
-			return num
-		else:
-			num+=1
+
+def get_float_digits(float_num):
+	num_string=str(float_num)
+	try:
+		_,decimal_part=num_string.split('.')
+	except ValueError:
+		return 0
+	decimal_part='1'+decimal_part
+	return len(str(int(decimal_part[::-1])))-1
+	
 
 def round_by_precision(value,precision):
 	value=value/precision
@@ -34,6 +35,9 @@ def round_by_precision(value,precision):
 		value=(int_value+1)*precision
 	else:
 		value=(int_value)*precision
+	if precision<1:
+		precision_position= get_float_digits(precision)
+		value=round(value,precision_position)
 		
 	return value
 
