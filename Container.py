@@ -1,3 +1,5 @@
+#from my_tool import Control
+import inspect
 
 class Container():
 	def __init__(self,every_frame_function=None):
@@ -126,16 +128,19 @@ class MemberVisitor():
 		return item in self.father
 		
 	
-		
 
 if __name__=='__main__':
-	a=Container()
-	print(id(a))
-	a.add(Container(),1)
-	b=MemberVisitor(a)
-	for i in b:
-		print(i)
-	print(dict(b))
+	pass
+	#a=ContainerControl()
+	
+	
+#	a=Container()
+#	print(id(a))
+#	a.add(Container(),1)
+#	b=MemberVisitor(a)
+#	for i in b:
+#		print(i)
+#	print(dict(b))
 #	b[1]=a
 #	c=Container()
 #	b[1]=c
