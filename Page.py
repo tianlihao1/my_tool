@@ -1,4 +1,4 @@
-from Container import *
+from BasicMixIn import Container
 
 import pygame
 

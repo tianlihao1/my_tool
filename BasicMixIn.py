@@ -1,5 +1,83 @@
-#from my_tool import Control
 import inspect
+
+
+class Control():
+	
+	def __init__(self,window=None,event_enable=True,visible=True,disable=False):
+		
+		self.window_rect=window.get_rect()
+		self.window=window
+		self.event_enable=event_enable
+		self.visible=visible
+		self.disable=disable
+	
+	def set_common(self,*args,aim_object=None,object=None):
+		'''
+		:top
+		:bottom
+		:center
+		:centerx
+		:centery
+		:right
+		:left
+		
+		'''
+		
+		if not object:
+			object=self.window_rect
+		if not aim_object:
+			aim_object=self.rect
+		for i in args:
+			setattr(aim_object,i,getattr(object,i))
+		self.update_rect()
+	def update_rect(self):
+		pass
+	
+	def update(self,**kargs):
+		for name,value in kargs.items():
+			setattr(self,name,value)
+		self.update_rect()
+    
+
+
+	def move(self,x=0,y=0):
+		'''
+		将控件向左移动x，向右移动y
+		正为顺方向，负为逆方向
+		参数：
+		:x
+		:y
+		
+		'''
+		
+		self.rect.x+= x
+		self.rect.y+=y
+		self.update_rect()
+
+	def change_status(self,status=None):
+		'''这是改变开启状态的方法'''
+		if status==None:
+			self.disable=not self.disable
+		else:
+			self.disable=status
+			
+	def layout_init(self,common=None,move=None):
+		if not common is None:
+			self.set_common(*common)
+		if not move is None:
+			self.move(*move)
+			
+	def check(self,event):
+		pass
+	
+	def blit(self):
+		pass
+	
+	def frame_update(self):
+		pass
+
+
+
 
 class Container():
 	def __init__(self,every_frame_function=None):
@@ -94,10 +172,6 @@ class Container():
 	def get_members(self):
 		return self.members
 
-#	def update(self,*args,**kargs):
-#		for i in self.member.values():
-#			i.update(*args,**kargs)
-
 	def bind(self,func=None):
 		self.every_frame_function=func
 	
@@ -128,27 +202,17 @@ class MemberVisitor():
 		return item in self.father
 		
 	
+class ContainerControl(Container,Control):
+	#def __init__(self,window=None,event_enable=True,visible=True,disable=False,every_frame_function=None):
+	def __init__(self,**kargs):
+		control_paras=inspect.signature(Control.__init__).parameters
+		container_paras=inspect.signature(Container.__init__).parameters
+		
+		para_to_Control={name:value for name,value in kargs.items() if name in control_paras }
+		para_to_Container={name:value for name,value in kargs.items() if name in container_paras }
+		
+		Control.__init__(self,**para_to_Control)
+		Container.__init__(self,**para_to_Container)
 
 if __name__=='__main__':
-	pass
-	#a=ContainerControl()
-	
-	
-#	a=Container()
-#	print(id(a))
-#	a.add(Container(),1)
-#	b=MemberVisitor(a)
-#	for i in b:
-#		print(i)
-#	print(dict(b))
-#	b[1]=a
-#	c=Container()
-#	b[1]=c
-#	print(id(c))
-#	print(id(b.father.member[1]))
-#	print(b.father.member_name_sort)
-#	print(i for i in b)
-#	if 1 in b:
-#		print(1)
-
-
+	ContainerControl()

@@ -1,7 +1,7 @@
 import pygame
 #import Page
 #from Page import Page
-from Container import Container
+from BasicMixIn import Container
 
 
 #需要修改member逻辑

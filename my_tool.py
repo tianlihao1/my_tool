@@ -5,6 +5,7 @@ import random
 import math
 #from Frame import Frame
 from Group import Group
+from BasicMixIn import Control
 
 pygame.init()
 #print(os.path.split(os.getcwd()))
@@ -46,85 +47,6 @@ def floor(value,precision):
 	value /=precision
 	value=int(value)
 	return value*precision
-
-
-
-
-
-class Control():
-	
-	def __init__(self,window=None,event_enable=True,visible=True,disable=False):
-		
-		self.window_rect=window.get_rect()
-		self.window=window
-		self.event_enable=event_enable
-		self.visible=visible
-		self.disable=disable
-	
-	def set_common(self,*args,aim_object=None,object=None):
-		'''
-		:top
-		:bottom
-		:center
-		:centerx
-		:centery
-		:right
-		:left
-		
-		'''
-		
-		if not object:
-			object=self.window_rect
-		if not aim_object:
-			aim_object=self.rect
-		for i in args:
-			setattr(aim_object,i,getattr(object,i))
-		self.update_rect()
-	def update_rect(self):
-		pass
-	
-	def update(self,**kargs):
-		for name,value in kargs.items():
-			setattr(self,name,value)
-		self.update_rect()
-    
-
-
-	def move(self,x=0,y=0):
-		'''
-		将控件向左移动x，向右移动y
-		正为顺方向，负为逆方向
-		参数：
-		:x
-		:y
-		
-		'''
-		
-		self.rect.x+= x
-		self.rect.y+=y
-		self.update_rect()
-
-	def change_status(self,status=None):
-		'''这是改变开启状态的方法'''
-		if status==None:
-			self.disable=not self.disable
-		else:
-			self.disable=status
-			
-	def layout_init(self,common=None,move=None):
-		if not common is None:
-			self.set_common(*common)
-		if not move is None:
-			self.move(*move)
-			
-	def check(self,event):
-		pass
-	
-	def blit(self):
-		pass
-	
-	def frame_update(self):
-		pass
 
 
 
