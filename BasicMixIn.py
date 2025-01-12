@@ -1,7 +1,17 @@
 import inspect
 
 
-class Control():
+class BasicControlMixIn():
+	def check(self,event):
+		pass
+	def blit(self):
+		pass
+	def frame_update(self):
+		pass
+
+
+
+class Control(BasicControlMixIn):
 	
 	def __init__(self,window=None,event_enable=True,visible=True,disable=False):
 		
@@ -67,14 +77,6 @@ class Control():
 		if not move is None:
 			self.move(*move)
 			
-	def check(self,event):
-		pass
-	
-	def blit(self):
-		pass
-	
-	def frame_update(self):
-		pass
 
 
 
@@ -213,6 +215,8 @@ class ContainerControl(Container,Control):
 		
 		Control.__init__(self,**para_to_Control)
 		Container.__init__(self,**para_to_Container)
+
+
 
 if __name__=='__main__':
 	ContainerControl()
