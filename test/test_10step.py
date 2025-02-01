@@ -12,7 +12,7 @@ class Setting():
 	exchange_rate=0.7
 	mutate_rate=0.1
 	realign_rate=0.1
-	remain_rate=0.8
+	remain_rate=0.6
 
 class GameMap():
 	def __init__(self,width,height):
@@ -188,6 +188,8 @@ class Evolution():
 				if sign=='n':break
 				elif sign=='c':
 					constant_going=False
+				elif sign=='y':
+					constant_going=True
 				
 				
 				
@@ -265,7 +267,7 @@ if __name__ =='__main__':
 	#e=Evolution()
 #	c0=Chromosome((1,2,3,4,5),2)
 #	game=GameMap(Setting.height,Setting.width)
-#	print( select_func(game.once_game_test)(get_many_chromosomes(1,10,get_random_gene)[0]))
+	#print( select_func(game.once_game_test)(get_many_chromosomes(1,10,get_random_gene)[0]))
 	main()
 	
 #	a=[(1, 1),(3, 1),(2, 2),(1, 4),(4, 4),(2, 3),(1, 2),(1, 2) ,(3, 2),(4, 0)]

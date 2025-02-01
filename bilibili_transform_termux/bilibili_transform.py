@@ -5,7 +5,9 @@ import functools
 import argparse
 from collections import namedtuple
 
-with open('Setting.json','r') as file:
+
+
+with open(os.path.join(os.path.split(__file__)[0],'Setting.json'),'r') as file:
 	setting_map=json.load(file)
 Setting=namedtuple('Setting',setting_map.keys())
 
