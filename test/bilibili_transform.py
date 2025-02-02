@@ -20,43 +20,27 @@ Setting=Setting(**setting_map)
 #		aim_video_dir='/storage/emulated/0/1work/bilibili_transform/video'
 
 @functools.lru_cache
-def get_all_res_path(top_dir):
+def get_all_res_path(top_dir,audio=True):
 	dir_list=[]
 	for ch_dir in os.listdir(top_dir):
 		#print(ch_dir)
-		
-		for i in get_res_path(os.path.join(top_dir,ch_dir)):
-			path,path0=i
+		path,path0=get_res_path(os.path.join(top_dir,ch_dir))
 		#if audio:
 			#path=os.path.join(path,'audio.m4s')
 		#else:
 			#path=os.path.join(path,'video.m4s')
-			dir_list.append((path,path0))
+		dir_list.append((path,path0))
 	return dir_list
 
 @functools.lru_cache
 def get_res_path(subdirectory):
-	#有合集
-	second_subdirectories=os.listdir(subdirectory)
-	result=[]
-	#合集层
-	#print(second_subdirectories)
-	for sec_subdirectory in second_subdirectories:
-		
-		
-		sec_subdirectory=os.path.join(subdirectory,sec_subdirectory)
-		#
-		res_path=get_res_path_in_sec_subdirectory(sec_subdirectory)
-		result.append((res_path,os.path.join(sec_subdirectory,'entry.json')))
-	return result
 	
-
-def get_res_path_in_sec_subdirectory(sec_subdirectory):
-	for i in os.listdir(sec_subdirectory):
-		path=os.path.join(sec_subdirectory,i)
+	subdirectory=os.path.join(subdirectory,os.listdir(subdirectory)[0])
+	for i in os.listdir(subdirectory):
+		path=os.path.join(subdirectory,i)
 		if os.path.isdir(path):
 			res_path=path
-	return res_path
+	return res_path,os.path.join(subdirectory,'entry.json')
 
 def load_json(path):
 	with open(path) as file:
@@ -68,12 +52,9 @@ def is_aim_dir_exist():
 	if not os.path.isdir(Setting.aim_video_dir):
 		os.mkdir(Setting.aim_video_dir)
 
-def transform(mode,res_path,title_json_path):
-	#res_path,title_json_path=get_res_path(subdirectory)
+def transform(mode,subdirectory):
+	res_path,title_json_path=get_res_path(subdirectory)
 	title= get_title_from_json(title_json_path)
-	
-	
-	
 	is_aim_dir_exist()
 		
 	audio_path=os.path.join(res_path,'audio.m4s')
@@ -109,22 +90,13 @@ def handle_list_parse(args):
 
 def handle_choose_parse(args):
 	if args.choose:
-		subdirectories=get_all_res_path(Setting.top_dir)
-		choices=[]
-		for i in args.choose:
-			try:a=[int(i)]
-			except ValueError:
-				start,end=i.split('-')
-				a=list(range(int(start),int(end)+1))
-			choices.extend(a)
-				
-		return (subdirectories[i]  for i in choices if i <= len(subdirectories)-1)
+		subdirectories=os.listdir(Setting.top_dir)
+		return (subdirectories[i]  for i in args.choose if i <= len(subdirectories)-1)
 
 def print_info():
 	for num,i in enumerate(get_all_res_path(Setting.top_dir)):
 		#print(len(get_all_res_path(Setting.top_dir)))
-		print(num,':',get_title_from_json(i[1]))
-
+		print(f'{num}: {get_title_from_json(i[1])}')
 		
 
 def set_parse():
@@ -138,7 +110,7 @@ def set_parse():
 	#列出缓存视频及其序号
 	parser.add_argument('-list','-l',action='store_true',help='列出缓存视频及其序号')
 	#选择要处理的缓存的序号
-	parser.add_argument('-choose','-c',type=str,nargs='*',help='选择要处理的缓存的序号，只处理传入给该选项的缓存视频')
+	parser.add_argument('-choose','-c',type=int,nargs='*',help='选择要处理的缓存的序号，只处理传入给该选项的缓存视频')
 	return parser
 
 def handle_parses(parser):
@@ -150,12 +122,10 @@ def handle_parses(parser):
 	mode=handle_mode(args)
 	
 	choices=handle_choose_parse(args)
-	#print(list(choices))
 	if not choices:
-		#print(1)
-		choices=get_all_res_path(Setting.top_dir)
+		choices=os.listdir(Setting.top_dir)
 	for i in choices:
-		transform(mode,*i)
+		transform(mode,os.path.join(Setting.top_dir,i))
 	
 #print_info()
 
@@ -204,10 +174,6 @@ def main():
 if __name__=='__main__':
 	#print(get_all_res_path('/storage/emulated/0/Android/data/tv.danmaku.bili/download/'))
 	main()
-	#for i in get_all_res_path('/storage/emulated/0/Android/data/tv.danmaku.bili/download/'):
-		#print(i)
-	#print_info()
-	
 	#pass
 	#print(Setting)
 #transform('a','/storage/emulated/0/Android/data/tv.danmaku.bili/download/113825491714363/')
