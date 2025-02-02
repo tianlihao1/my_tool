@@ -68,7 +68,7 @@ def is_aim_dir_exist():
 	if not os.path.isdir(Setting.aim_video_dir):
 		os.mkdir(Setting.aim_video_dir)
 
-def transform(mode,res_path,title_json_path):
+def transform(mode,res_path,title_json_path,command=''):
 	#res_path,title_json_path=get_res_path(subdirectory)
 	title= get_title_from_json(title_json_path)
 	
@@ -79,10 +79,10 @@ def transform(mode,res_path,title_json_path):
 	audio_path=os.path.join(res_path,'audio.m4s')
 	if mode=='v':
 		video_path=os.path.join(res_path,'video.m4s')
-		os.system(f'ffmpeg -n -i {audio_path} -i {video_path} -c copy "{os.path.join(Setting.aim_video_dir,title)}.mp4"')
+		os.system(f'ffmpeg -n -i {audio_path} -i {video_path} -c copy {command} "{os.path.join(Setting.aim_video_dir,title)}.mp4"')
 		#print(f'ffmpeg -n -i {audio_path} -i {video_path} -c copy "{os.path.join(Setting.aim_video_dir,title)}.mp4"')
 	else:
-		os.system(f'ffmpeg -n -i {audio_path} "{os.path.join(Setting.aim_audio_dir,title)}.mp3"')
+		os.system(f'ffmpeg -n -i {audio_path} {command} "{os.path.join(Setting.aim_audio_dir,title)}.mp3"')
 		#print(f'ffmpeg -n -i {audio_path} "{os.path.join(Setting.aim_audio_dir,title)}.mp3"')
 
 	
@@ -139,10 +139,29 @@ def set_parse():
 	parser.add_argument('-list','-l',action='store_true',help='列出缓存视频及其序号')
 	#选择要处理的缓存的序号
 	parser.add_argument('-choose','-c',type=str,nargs='*',help='选择要处理的缓存的序号，只处理传入给该选项的缓存视频')
+	
+	parser.add_argument('-to',type=str,help='裁剪到传入给to的时间，格式：00:00:00	或直接填秒数')
+	
+	parser.add_argument('-ss',type=str,help='从传入给ss的时间开始裁剪，格式：00:00:00	或直接填秒数')
+	
 	return parser
+
+
+def handle_to_parses(args):
+	if args.to :
+		return f'-to {args.to}'
+	else:
+		return ''
+
+def handle_ss_parser(args):
+	if args.ss:
+		return f'-ss {args.ss}'
+	else:
+		return ''
 
 def handle_parses(parser):
 	args=parser.parse_args()
+	#print(args)
 	
 	if handle_list_parse(args):
 		return 
@@ -150,12 +169,18 @@ def handle_parses(parser):
 	mode=handle_mode(args)
 	
 	choices=handle_choose_parse(args)
+	
+	
+	
+	command=handle_ss_parser(args)+' '+handle_to_parses(args)
+	
+	
 	#print(list(choices))
 	if not choices:
 		#print(1)
 		choices=get_all_res_path(Setting.top_dir)
 	for i in choices:
-		transform(mode,*i)
+		transform(mode,*i,command)
 	
 #print_info()
 
@@ -164,43 +189,6 @@ def main():
 
 
 
-
-
-
-
-
-#def main(audio=True):
-#	for file_dir,title_path in get_all_res_path(Setting.top_dir):
-#		pass
-		
-			#print(f'ffmpeg -i {audio_path} "{os.path.join(aim_audio_dir,title)}.mp3"')
-#			print(aim_audio_dir)
-#			print(os.path.join(aim_audio_dir,title))
-		
-#print(get_path(top_dir))
-#print(os.listdir())
-
-
-#def a():
-#		audio=True
-#		file,title_path=('/storage/emulated/0/Android/data/tv.danmaku.bili/download/573151831/c_1190134131/16', '/storage/emulated/0/Android/data/tv.danmaku.bili/download/573151831/c_1190134131/entry.json')
-#		title=load_json(title_path)['title']
-#		audio_path=os.path.join(file,'audio.m4s')
-#		if not audio:
-#			video_path=os.path.join(file,'video.m4s')
-#			os.system(f'ffmpeg -i {audio_path} -i {video_path} -c copy {title}.mp4')
-#		else:
-#			
-			#os.system(f'ffmpeg -i {audio_path} {title}.mp3')
-			#print(f'ffmpeg -i {audio_path} {title}.mp3')
-#a()
-
-
-#main(len(sys.argv)==1)
-#is_aim_dir_exist()
-
-#for file,title_path in get_path(top_dir):
-#	print(file,'  ',title_path)
 if __name__=='__main__':
 	#print(get_all_res_path('/storage/emulated/0/Android/data/tv.danmaku.bili/download/'))
 	main()
