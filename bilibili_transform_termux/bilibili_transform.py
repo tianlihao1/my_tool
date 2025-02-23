@@ -19,6 +19,8 @@ Setting=Setting(**setting_map)
 #		#aim_audio_dir=
 #		aim_video_dir='/storage/emulated/0/1work/bilibili_transform/video'
 
+
+
 @functools.lru_cache
 def get_all_res_path(top_dir):
 	dir_list=[]
@@ -33,6 +35,8 @@ def get_all_res_path(top_dir):
 			#path=os.path.join(path,'video.m4s')
 			dir_list.append((path,path0))
 	return dir_list
+	
+
 
 @functools.lru_cache
 def get_res_path(subdirectory):
@@ -51,12 +55,15 @@ def get_res_path(subdirectory):
 	return result
 	
 
+
 def get_res_path_in_sec_subdirectory(sec_subdirectory):
 	for i in os.listdir(sec_subdirectory):
 		path=os.path.join(sec_subdirectory,i)
 		if os.path.isdir(path):
 			res_path=path
 	return res_path
+
+
 
 def load_json(path):
 	with open(path) as file:
@@ -79,11 +86,13 @@ def transform(mode,res_path,title_json_path,command=''):
 	audio_path=os.path.join(res_path,'audio.m4s')
 	if mode=='v':
 		video_path=os.path.join(res_path,'video.m4s')
-		os.system(f'ffmpeg -n -i {audio_path} -i {video_path} -c copy {command} "{os.path.join(Setting.aim_video_dir,title)}.mp4"')
+		os.system(f'ffmpeg -i {audio_path} -i {video_path} -c copy {command} "{os.path.join(Setting.aim_video_dir,title)}.mp4"')
 		#print(f'ffmpeg -n -i {audio_path} -i {video_path} -c copy "{os.path.join(Setting.aim_video_dir,title)}.mp4"')
 	else:
-		os.system(f'ffmpeg -n -i {audio_path} {command} "{os.path.join(Setting.aim_audio_dir,title)}.mp3"')
+		os.system(f'ffmpeg -i {audio_path} {command} "{os.path.join(Setting.aim_audio_dir,title)}.mp3"')
 		#print(f'ffmpeg -n -i {audio_path} "{os.path.join(Setting.aim_audio_dir,title)}.mp3"')
+
+
 
 	
 def get_title_from_json(title_json_path):
@@ -100,7 +109,8 @@ def handle_mode(args):
 		sign='v'
 	else:
 		sign=args.mode
-	return sign
+	if sign:return sign
+	else:raise ValueError('必须设置输出的类型（音频[-a]/视频[-v]）或用-m [a/v]来指定类型')
 
 def handle_list_parse(args):
 	if args.list:
@@ -120,20 +130,27 @@ def handle_choose_parse(args):
 				
 		return (subdirectories[i]  for i in choices if i <= len(subdirectories)-1)
 
+
+def handle_over_parser(args):
+	if args.over:return '-y'
+	else: return '-n'
+
+
 def print_info():
 	for num,i in enumerate(get_all_res_path(Setting.top_dir)):
 		#print(len(get_all_res_path(Setting.top_dir)))
 		print(num,':',get_title_from_json(i[1]))
 
-		
+
 
 def set_parse():
+
 	#视频还是音频
 	parser=argparse.ArgumentParser()
 	group=parser.add_mutually_exclusive_group()
 	group.add_argument('-video','-v',action='store_true',help='输出为视频')
 	group.add_argument('-audio','-a',action='store_true',help='输出为音频')
-	group.add_argument('-mode','-m',help='选择模式： a：转为音频，v：转为视频',default='a',choices=['a','v'])
+	group.add_argument('-mode','-m',help='选择模式： a：转为音频，v：转为视频',default='',choices=['a','v'])
 	
 	#列出缓存视频及其序号
 	parser.add_argument('-list','-l',action='store_true',help='列出缓存视频及其序号')
@@ -143,6 +160,8 @@ def set_parse():
 	parser.add_argument('-to',type=str,help='裁剪到传入给to的时间，格式：00:00:00	或直接填秒数')
 	
 	parser.add_argument('-ss',type=str,help='从传入给ss的时间开始裁剪，格式：00:00:00	或直接填秒数')
+	
+	parser.add_argument('-over',action='store_true',help='覆盖已转换过的视频')
 	
 	return parser
 
@@ -159,20 +178,27 @@ def handle_ss_parser(args):
 	else:
 		return ''
 
+
 def handle_parses(parser):
 	args=parser.parse_args()
 	#print(args)
 	
 	if handle_list_parse(args):
 		return 
-	
-	mode=handle_mode(args)
+	try:
+		mode=handle_mode(args)
+	except Exception as e:
+		print(e.args[0])
+		return
 	
 	choices=handle_choose_parse(args)
 	
 	
 	
-	command=handle_ss_parser(args)+' '+handle_to_parses(args)
+	command=\
+		handle_ss_parser(args)+' '\
+		+handle_to_parses(args)+' '\
+		+handle_over_parser(args)
 	
 	
 	#print(list(choices))
