@@ -41,6 +41,20 @@ class Page(Container):
 	def start_page(self,page_name):
 		pass
 		
+	def as_model(self):
+		superior=self
+		class PageModel(Page):
+			def __init__(self,*args,**kargs):
+				super().__init__(*args,**kargs)
+				for name,member in superior.items():
+					self.add(member,name)
+			check=superior.check
+			blit=superior.blit
+			start_page=superior.start_page
+			stop_page=superior.stop_page
+			frame_update=superior.frame_update
+		return PageModel
+		
 	def run(self):
 		while True:
 			for event in pygame.event.get():

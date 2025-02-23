@@ -4,7 +4,6 @@ import pygame
 from BasicMixIn import Container
 
 
-#需要修改member逻辑
 class Pages(Container):
 	def __init__(self,window):
 		super().__init__()
@@ -26,7 +25,6 @@ class Pages(Container):
 
 
 	def next_to(self,name,remain_previous_bg=False):
-#这里需要修改
 		#print(self.member)
 		self.now_page.stop_page(self.members[name])
 		#self.remain_previous_bg=remain_previous_bg
