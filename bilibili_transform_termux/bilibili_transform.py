@@ -19,6 +19,27 @@ Setting=Setting(**setting_map)
 #		#aim_audio_dir=
 #		aim_video_dir='/storage/emulated/0/1work/bilibili_transform/video'
 
+def set_parse():
+
+	#视频还是音频
+	parser=argparse.ArgumentParser()
+	group=parser.add_mutually_exclusive_group()
+	group.add_argument('-video','-v',action='store_true',help='输出为视频')
+	group.add_argument('-audio','-a',action='store_true',help='输出为音频')
+	group.add_argument('-mode','-m',help='选择模式： a：转为音频，v：转为视频',default='',choices=['a','v'])
+	
+	#列出缓存视频及其序号
+	parser.add_argument('-list','-l',action='store_true',help='列出缓存视频及其序号')
+	#选择要处理的缓存的序号
+	parser.add_argument('-choose','-c',type=str,nargs='*',help='选择要处理的缓存的序号，只处理传入给该选项的缓存视频')
+	
+	parser.add_argument('-to',type=str,help='裁剪到传入给to的时间，格式：00:00:00	或直接填秒数')
+	
+	parser.add_argument('-ss',type=str,help='从传入给ss的时间开始裁剪，格式：00:00:00	或直接填秒数')
+	
+	parser.add_argument('-over',action='store_true',help='覆盖已转换过的视频')
+	
+	return parser
 
 
 @functools.lru_cache
@@ -40,6 +61,10 @@ def get_all_res_path(top_dir):
 
 @functools.lru_cache
 def get_res_path(subdirectory):
+	'''
+	:paser subdirectory:str download下第一层目录,sec_subdirectory为合集层
+	:return list:包含subdirectory层下所有项(完整路径,entry.json的完整路径)
+	'''
 	#有合集
 	second_subdirectories=os.listdir(subdirectory)
 	result=[]
@@ -102,6 +127,11 @@ def get_title_from_json(title_json_path):
 
 
 
+def print_info():
+	for num,i in enumerate(get_all_res_path(Setting.top_dir)):
+		#print(len(get_all_res_path(Setting.top_dir)))
+		print(num,':',get_title_from_json(i[1]))
+
 def handle_mode(args):
 	if args.audio:
 		sign='a'
@@ -131,52 +161,36 @@ def handle_choose_parse(args):
 		return (subdirectories[i]  for i in choices if i <= len(subdirectories)-1)
 
 
-def handle_over_parser(args):
+def handle_over_parse(args):
 	if args.over:return '-y'
 	else: return '-n'
 
 
-def print_info():
-	for num,i in enumerate(get_all_res_path(Setting.top_dir)):
-		#print(len(get_all_res_path(Setting.top_dir)))
-		print(num,':',get_title_from_json(i[1]))
-
-
-
-def set_parse():
-
-	#视频还是音频
-	parser=argparse.ArgumentParser()
-	group=parser.add_mutually_exclusive_group()
-	group.add_argument('-video','-v',action='store_true',help='输出为视频')
-	group.add_argument('-audio','-a',action='store_true',help='输出为音频')
-	group.add_argument('-mode','-m',help='选择模式： a：转为音频，v：转为视频',default='',choices=['a','v'])
-	
-	#列出缓存视频及其序号
-	parser.add_argument('-list','-l',action='store_true',help='列出缓存视频及其序号')
-	#选择要处理的缓存的序号
-	parser.add_argument('-choose','-c',type=str,nargs='*',help='选择要处理的缓存的序号，只处理传入给该选项的缓存视频')
-	
-	parser.add_argument('-to',type=str,help='裁剪到传入给to的时间，格式：00:00:00	或直接填秒数')
-	
-	parser.add_argument('-ss',type=str,help='从传入给ss的时间开始裁剪，格式：00:00:00	或直接填秒数')
-	
-	parser.add_argument('-over',action='store_true',help='覆盖已转换过的视频')
-	
-	return parser
-
-
-def handle_to_parses(args):
+def handle_to_parse(args):
 	if args.to :
 		return f'-to {args.to}'
 	else:
 		return ''
 
-def handle_ss_parser(args):
+def handle_ss_parse(args):
 	if args.ss:
 		return f'-ss {args.ss}'
 	else:
 		return ''
+
+def handle_add_parse(args):
+	if '+' in args.choose:
+		#将choose中的所有合并一起
+		result= [list(args.choose)]
+	else:
+		#每一项是否存在+
+		result=[]
+		for i in args.choose:
+			if '+' in i:
+				result.append([j for j in i.split('+') if j])
+			else:
+				result.append([i])
+	return result
 
 
 def handle_parses(parser):
@@ -196,9 +210,9 @@ def handle_parses(parser):
 	
 	
 	command=\
-		handle_ss_parser(args)+' '\
-		+handle_to_parses(args)+' '\
-		+handle_over_parser(args)
+		handle_ss_parse(args)+' '\
+		+handle_to_parse(args)+' '\
+		+handle_over_parse(args)
 	
 	
 	#print(list(choices))
